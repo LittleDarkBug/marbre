@@ -136,7 +136,7 @@ export function Outline({ doc }: { doc: Doc }) {
               onClick={() => {
                 let id = ''
                 edit((d) => {
-                  id = addDecor(d, kind, kind === 'icon' ? 'star' : undefined)
+                  id = addDecor(d, kind, kind === 'icon' ? { icon: 'star' } : {})
                 })
                 select({ blockId: decorKey(id) })
               }}

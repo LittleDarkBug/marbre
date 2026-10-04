@@ -33,7 +33,7 @@ export const newEntry = (title = ''): Entry => ({
 })
 
 export function newBlock(type: BlockType, heading = ''): Block {
-  const common = { id: uid('b'), heading, hidden: false }
+  const common = { id: uid('b'), heading, hidden: false, style: {} }
   switch (type) {
     case 'identity':
       return { ...common, type, name: '', title: '', highlights: [], contacts: [] }
@@ -45,6 +45,12 @@ export function newBlock(type: BlockType, heading = ''): Block {
       return { ...common, type, groups: [{ id: uid('g'), label: '', items: '' }] }
     case 'pairs':
       return { ...common, type, items: [{ id: uid('p'), key: '', value: '' }] }
+    case 'note':
+      return { ...common, type, role: 'p', body: '' }
+    case 'photo':
+      return { ...common, type, src: '', alt: '', shape: 'circle', focusX: 50, focusY: 50, zoom: 1, grayscale: false, ratio: 1 }
+    case 'rating':
+      return { ...common, type, display: 'dots', max: 5, items: [{ id: uid('r'), label: '', level: 3 }] }
   }
 }
 
@@ -58,7 +64,7 @@ export function blankDoc(name = 'CV', lang: 'fr' | 'en' = 'fr'): Doc {
     name,
     lang,
     updatedAt: new Date().toISOString(),
-    page: { format: 'A4', fit: 'one', margin: { top: 12, right: 12, bottom: 10, left: 12 } },
+    page: { format: 'A4', fit: 'one', count: 1, background: '', backgroundImage: '', margin: { top: 12, right: 12, bottom: 10, left: 12 } },
     theme: defaultTheme(),
     layout: {
       mode: 'flow',

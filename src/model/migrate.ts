@@ -1,3 +1,4 @@
+import { sanitizeBlocks } from './rich'
 import { Doc, SCHEMA_VERSION } from './schema'
 
 const steps: Record<number, (raw: Record<string, unknown>) => Record<string, unknown>> = {}
@@ -17,5 +18,5 @@ export function load(input: unknown): Doc {
   }
   const parsed = Doc.safeParse(raw)
   if (!parsed.success) throw new DocError(parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; '))
-  return parsed.data
+  return { ...parsed.data, blocks: sanitizeBlocks(parsed.data.blocks) }
 }

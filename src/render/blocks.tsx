@@ -1,4 +1,5 @@
-import type { Block, EntriesBlock, Entry, IdentityBlock, PairsBlock, SkillsBlock, TextBlock } from '../model/schema'
+import type { Block, EntriesBlock, Entry, IdentityBlock, NoteBlock, PairsBlock, PhotoBlock, RatingBlock, SkillsBlock, TextBlock } from '../model/schema'
+import { blockStyle } from './style'
 import { useRender, useStyle } from './context'
 
 const useSplit = () => useStyle().entry === 'split'
@@ -17,7 +18,7 @@ function Identity({ block }: { block: IdentityBlock }) {
   const { Field, blockProps, itemProps, editable } = useRender()
   const p = ['blocks', block.id]
   return (
-    <header className="mb-block mb-id" {...blockProps(block)}>
+    <header className="mb-block mb-id" {...blockProps(block)} style={blockStyle(block)}>
       <div className="mb-id-main">
         <Field as="h1" className="mb-name" path={[...p, 'name']} value={block.name} plain hint="hint.name" />
         <Field as="p" className="mb-title" path={[...p, 'title']} value={block.title} plain hint="hint.title" />
@@ -53,7 +54,7 @@ function Identity({ block }: { block: IdentityBlock }) {
 function Text({ block }: { block: TextBlock }) {
   const { Field, blockProps } = useRender()
   return (
-    <section className="mb-block mb-sec" {...blockProps(block)}>
+    <section className="mb-block mb-sec" {...blockProps(block)} style={blockStyle(block)}>
       <Heading block={block} />
       <Field as="div" className="mb-text" path={['blocks', block.id, 'body']} value={block.body} multiline hint="hint.text" />
     </section>
@@ -136,7 +137,7 @@ function Entries({ block }: { block: EntriesBlock }) {
   const { blockProps } = useRender()
   const split = useSplit()
   return (
-    <section className="mb-block mb-sec" {...blockProps(block)}>
+    <section className="mb-block mb-sec" {...blockProps(block)} style={blockStyle(block)}>
       <Heading block={block} />
       {block.items.map((e) => (split ? <SplitEntry key={e.id} block={block} entry={e} /> : <EntryView key={e.id} block={block} entry={e} />))}
     </section>
@@ -149,7 +150,7 @@ function Skills({ block }: { block: SkillsBlock }) {
   const inline = style.skills === 'inline'
   const colon = style.lang === 'fr' ? '\u00a0:' : ':'
   return (
-    <section className="mb-block mb-sec" {...blockProps(block)}>
+    <section className="mb-block mb-sec" {...blockProps(block)} style={blockStyle(block)}>
       <Heading block={block} />
       {block.groups.map((g) => (
         <p key={g.id} className="mb-skill" {...itemProps(block, g.id)}>
@@ -170,7 +171,7 @@ function Pairs({ block }: { block: PairsBlock }) {
   const sep = style.lang === 'fr' ? ' ; ' : '; '
   if (inline) {
     return (
-      <section className="mb-block mb-sec" {...blockProps(block)}>
+      <section className="mb-block mb-sec" {...blockProps(block)} style={blockStyle(block)}>
         <Heading block={block} />
         <p className="mb-pair mb-pairs-inline">
           {block.items.map((x, i) => (
@@ -186,7 +187,7 @@ function Pairs({ block }: { block: PairsBlock }) {
     )
   }
   return (
-    <section className="mb-block mb-sec" {...blockProps(block)}>
+    <section className="mb-block mb-sec" {...blockProps(block)} style={blockStyle(block)}>
       <Heading block={block} />
       {block.items.map((x) => (
         <p key={x.id} className="mb-pair" {...itemProps(block, x.id)}>
@@ -194,6 +195,63 @@ function Pairs({ block }: { block: PairsBlock }) {
           {x.key && x.value ? ' · ' : ''}
           <Field path={['blocks', block.id, 'items', x.id, 'value']} value={x.value} hint="hint.value" />
         </p>
+      ))}
+    </section>
+  )
+}
+
+function Note({ block }: { block: NoteBlock }) {
+  const { Field, blockProps } = useRender()
+  return (
+    <div className={`mb-block mb-note mb-note-${block.role}`} {...blockProps(block)} style={blockStyle(block)}>
+      <Field as={block.role === 'p' ? 'div' : block.role} className="mb-note-text" path={['blocks', block.id, 'body']} value={block.body} multiline hint="hint.text" />
+    </div>
+  )
+}
+
+function Photo({ block }: { block: PhotoBlock }) {
+  const { blockProps, editable, photo } = useRender()
+  const img = block.src ? (
+    <img
+      src={block.src}
+      alt={block.alt}
+      draggable={false}
+      style={{
+        objectPosition: `${block.focusX}% ${block.focusY}%`,
+        transform: block.zoom !== 1 ? `scale(${block.zoom})` : undefined,
+        transformOrigin: `${block.focusX}% ${block.focusY}%`,
+        filter: block.grayscale ? 'grayscale(1)' : undefined,
+      }}
+    />
+  ) : editable ? (
+    photo?.(block)
+  ) : null
+  if (!img) return null
+  return (
+    <figure className={`mb-block mb-photo mb-photo-${block.shape}`} {...blockProps(block)} style={{ ...blockStyle(block), aspectRatio: String(block.ratio) }}>
+      {img}
+    </figure>
+  )
+}
+
+function RatingView({ block }: { block: RatingBlock }) {
+  const { Field, blockProps, itemProps } = useRender()
+  return (
+    <section className={`mb-block mb-sec mb-rating mb-rating-${block.display}`} {...blockProps(block)} style={blockStyle(block)}>
+      <Heading block={block} />
+      {block.items.map((r) => (
+        <div key={r.id} className="mb-rate" {...itemProps(block, r.id)}>
+          <Field className="mb-rate-label" path={['blocks', block.id, 'items', r.id, 'label']} value={r.label} plain hint="hint.label" />
+          {block.display === 'text' ? (
+            <span className="mb-rate-text">{`${r.level}/${block.max}`}</span>
+          ) : block.display === 'bar' ? (
+            <span className="mb-rate-bar" aria-hidden="true"><i style={{ width: `${(Math.min(r.level, block.max) / block.max) * 100}%` }} /></span>
+          ) : (
+            <span className="mb-rate-dots" aria-hidden="true">
+              {Array.from({ length: block.max }, (_, i) => <i key={i} className={i < r.level ? 'on' : ''} />)}
+            </span>
+          )}
+        </div>
       ))}
     </section>
   )
@@ -212,5 +270,11 @@ export function BlockView({ block }: { block: Block }) {
       return <Skills block={block} />
     case 'pairs':
       return <Pairs block={block} />
+    case 'note':
+      return <Note block={block} />
+    case 'photo':
+      return <Photo block={block} />
+    case 'rating':
+      return <RatingView block={block} />
   }
 }

@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { Doc } from '../model/schema'
 import { MM, PAGE_MM, Page } from '../render/Page'
-import { loadThemeFonts } from '../render/fonts'
+import { loadDocFonts } from '../render/style'
 
 export function FitPage({ doc, className, children, pageRef }: { doc: Doc; className?: string; children?: ReactNode; pageRef?: (el: HTMLDivElement | null) => void }) {
   const box = useRef<HTMLDivElement>(null)
@@ -11,11 +11,11 @@ export function FitPage({ doc, className, children, pageRef }: { doc: Doc; class
   const h = PAGE_MM[doc.page.format].h * MM
   useEffect(() => {
     let alive = true
-    loadThemeFonts(doc.theme).then(() => alive && setReady(true))
+    loadDocFonts(doc).then(() => alive && setReady(true))
     return () => {
       alive = false
     }
-  }, [doc.theme])
+  }, [doc])
   useLayoutEffect(() => {
     const el = box.current
     if (!el) return

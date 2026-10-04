@@ -3,7 +3,7 @@ import { load } from '../model/migrate'
 import type { Doc } from '../model/schema'
 import { resolve } from '../model/variants'
 import { PAGE_MM, Page, type Fit } from '../render/Page'
-import { loadThemeFonts } from '../render/fonts'
+import { loadDocFonts } from '../render/style'
 import { readDoc } from '../store/persist'
 import { analyze } from '../ats/analyze'
 import { samplePage } from '../ats/measure'
@@ -21,7 +21,7 @@ export function PrintView({ id, variant, auto }: { id: string; variant: string |
     source.then(async (d) => {
       if (!d) return
       const resolved = resolve(d, variant)
-      await loadThemeFonts(resolved.theme)
+      await loadDocFonts(resolved)
       setDoc(resolved)
       setReady(true)
     })

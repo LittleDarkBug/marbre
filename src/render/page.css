@@ -41,6 +41,8 @@
 .mb-decor { position: absolute; border-style: solid; border-color: currentColor; border-width: 0; background-size: cover; background-position: center; }
 .mb-decor-rule { background: currentColor; }
 .mb-decor-ellipse { border-radius: 50%; }
+.mb-decor-line svg, .mb-decor-qr svg { width: 100%; height: 100%; display: block; }
+.mb-decor-qr { background: #fff; padding: 1.5mm; }
 .mb-decor-icon svg { width: 100%; height: 100%; display: block; }
 
 .mb-block { min-width: 0; }
@@ -195,3 +197,28 @@
   @page { margin: 0; }
   .mb-page { overflow: hidden; }
 }
+
+.mb-break { position: absolute; left: 0; right: 0; height: 0; border-top: 1px dashed rgba(0, 0, 0, 0.35); z-index: 60; pointer-events: none; }
+
+.mb-note { min-width: 0; }
+.mb-note-text { margin: 0; }
+.mb-note-h1 .mb-note-text { font-family: var(--mb-f-display); font-weight: var(--mb-w-display); font-size: calc(var(--mb-s-body) * 2.6); line-height: 1.02; }
+.mb-note-h2 .mb-note-text { font-family: var(--mb-f-heading); font-weight: var(--mb-w-heading); font-size: calc(var(--mb-s-body) * 1.6); line-height: 1.1; }
+.mb-note-h3 .mb-note-text { font-weight: var(--mb-w-strong); font-size: calc(var(--mb-s-body) * 1.15); line-height: 1.25; }
+
+.mb-photo { position: relative; margin: 0; overflow: hidden; width: 100%; max-width: 100%; background: var(--mb-panel); }
+.mb-frame > .mb-photo { height: 100%; aspect-ratio: auto !important; }
+.mb-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.mb-photo-circle { border-radius: 50%; }
+.mb-photo-rounded { border-radius: 4mm; }
+.mb-col > .mb-photo { width: 62%; }
+.mb-photo-empty { display: grid; place-items: center; width: 100%; height: 100%; color: var(--mb-accent); font-size: 11px; text-align: center; padding: 8px; cursor: pointer; }
+
+.mb-rate { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.mb-rate + .mb-rate { margin-top: var(--mb-sp-line); }
+.mb-rate-dots { display: inline-flex; gap: 3px; flex: 0 0 auto; }
+.mb-rate-dots i { width: 0.55em; height: 0.55em; border-radius: 50%; border: 1px solid var(--mb-accent); }
+.mb-rate-dots i.on { background: var(--mb-accent); }
+.mb-rate-bar { position: relative; flex: 0 0 42%; height: 0.38em; border-radius: 1em; background: color-mix(in srgb, var(--mb-accent) 18%, transparent); overflow: hidden; }
+.mb-rate-bar i { position: absolute; inset: 0 auto 0 0; background: var(--mb-accent); border-radius: 1em; }
+.mb-rate-text { font-family: var(--mb-f-accent); color: var(--mb-accent); font-weight: var(--mb-w-accent); }

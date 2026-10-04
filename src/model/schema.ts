@@ -32,7 +32,26 @@ export const SkillGroup = z.object({ id, label: z.string(), items: z.string() })
 
 export const Pair = z.object({ id, key: rich, value: rich })
 
-const base = { id, heading: z.string().default(''), hidden: z.boolean().default(false) }
+export const BlockStyle = z.object({
+  font: z.string().optional(),
+  headingFont: z.string().optional(),
+  size: z.number().optional(),
+  weight: z.number().optional(),
+  color: z.string().optional(),
+  accent: z.string().optional(),
+  background: z.string().optional(),
+  padding: z.number().optional(),
+  radius: z.number().optional(),
+  borderWidth: z.number().optional(),
+  borderColor: z.string().optional(),
+  align: z.enum(['left', 'center', 'right', 'justify']).optional(),
+  leading: z.number().optional(),
+  tracking: z.number().optional(),
+  uppercase: z.boolean().optional(),
+  opacity: z.number().optional(),
+})
+
+const base = { id, heading: z.string().default(''), hidden: z.boolean().default(false), style: BlockStyle.default({}) }
 
 export const IdentityBlock = z.object({
   ...base,
@@ -56,7 +75,32 @@ export const SkillsBlock = z.object({ ...base, type: z.literal('skills'), groups
 
 export const PairsBlock = z.object({ ...base, type: z.literal('pairs'), items: z.array(Pair) })
 
-export const Block = z.discriminatedUnion('type', [IdentityBlock, TextBlock, EntriesBlock, SkillsBlock, PairsBlock])
+export const NoteBlock = z.object({ ...base, type: z.literal('note'), role: z.enum(['p', 'h1', 'h2', 'h3']).default('p'), body: rich })
+
+export const PhotoBlock = z.object({
+  ...base,
+  type: z.literal('photo'),
+  src: z.string().default(''),
+  alt: z.string().default(''),
+  shape: z.enum(['rect', 'rounded', 'circle']).default('circle'),
+  focusX: z.number().default(50),
+  focusY: z.number().default(50),
+  zoom: z.number().default(1),
+  grayscale: z.boolean().default(false),
+  ratio: z.number().default(1),
+})
+
+export const Rating = z.object({ id, label: z.string(), level: z.number() })
+
+export const RatingBlock = z.object({
+  ...base,
+  type: z.literal('rating'),
+  display: z.enum(['dots', 'bar', 'text']).default('dots'),
+  max: z.number().default(5),
+  items: z.array(Rating),
+})
+
+export const Block = z.discriminatedUnion('type', [IdentityBlock, TextBlock, EntriesBlock, SkillsBlock, PairsBlock, NoteBlock, PhotoBlock, RatingBlock])
 
 export const FontRole = z.enum(['display', 'heading', 'body', 'accent'])
 
@@ -106,17 +150,25 @@ export const Frame = z.object({
   h: z.number().positive(),
   rotate: z.number().default(0),
   z: z.number().default(0),
+  locked: z.boolean().default(false),
 })
 
 export const Decor = z.object({
   id,
-  kind: z.enum(['rule', 'rect', 'ellipse', 'icon', 'image']),
+  kind: z.enum(['rule', 'rect', 'ellipse', 'icon', 'image', 'line', 'qr']),
   frame: Frame,
   color: z.string().default('accent'),
   stroke: z.number().default(0.4),
   fill: z.boolean().default(true),
   icon: z.string().optional(),
   src: z.string().optional(),
+  strokeColor: z.string().optional(),
+  radius: z.number().default(0),
+  opacity: z.number().default(1),
+  dash: z.enum(['solid', 'dashed', 'dotted']).default('solid'),
+  arrow: z.enum(['none', 'end', 'both']).default('none'),
+  text: z.string().optional(),
+  hidden: z.boolean().default(false),
 })
 
 export const Layout = z.object({
@@ -131,6 +183,9 @@ export const Layout = z.object({
 export const Page = z.object({
   format: z.enum(['A4', 'Letter']),
   fit: z.enum(['one', 'flow']).default('one'),
+  count: z.number().int().min(1).max(4).default(1),
+  background: z.string().default(''),
+  backgroundImage: z.string().default(''),
   margin: z.object({ top: z.number(), right: z.number(), bottom: z.number(), left: z.number() }),
 })
 
@@ -179,6 +234,11 @@ export type TextBlock = z.infer<typeof TextBlock>
 export type EntriesBlock = z.infer<typeof EntriesBlock>
 export type SkillsBlock = z.infer<typeof SkillsBlock>
 export type PairsBlock = z.infer<typeof PairsBlock>
+export type NoteBlock = z.infer<typeof NoteBlock>
+export type PhotoBlock = z.infer<typeof PhotoBlock>
+export type RatingBlock = z.infer<typeof RatingBlock>
+export type Rating = z.infer<typeof Rating>
+export type BlockStyle = z.infer<typeof BlockStyle>
 export type Block = z.infer<typeof Block>
 export type BlockType = Block['type']
 export type FontRole = z.infer<typeof FontRole>

@@ -1,5 +1,6 @@
 import { createContext, useContext, type ElementType, type HTMLAttributes } from 'react'
-import type { Block, Theme } from '../model/schema'
+import type { ReactNode } from 'react'
+import type { Block, PhotoBlock, Theme } from '../model/schema'
 import type { Key } from '../i18n'
 import { escape } from '../model/rich'
 
@@ -23,6 +24,7 @@ export type RenderApi = {
   Field: (p: FieldProps) => React.ReactNode
   blockProps: (block: Block) => HTMLAttributes<HTMLElement> & Record<`data-${string}`, string>
   itemProps: (block: Block, itemId: string) => HTMLAttributes<HTMLElement> & Record<`data-${string}`, string>
+  photo?: (block: PhotoBlock) => ReactNode
 }
 
 export const staticApi: RenderApi = {

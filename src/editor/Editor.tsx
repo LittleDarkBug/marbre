@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { go } from '../app/router'
 import { useT, useUiLang, type Key } from '../i18n'
 import type { Fit } from '../render/Page'
-import { loadThemeFonts } from '../render/fonts'
+import { loadDocFonts } from '../render/style'
 import { useDoc, useResolved } from '../store/doc'
 import { readDoc, saveDoc, writeToFolder } from '../store/persist'
 import { useTheme } from '../app/theme'
@@ -11,6 +11,8 @@ import { Wordmark } from '../ui/Wordmark'
 import { ExportPanel, printDoc } from './ExportPanel'
 import { Inspector } from './Inspector'
 import { Outline } from './Outline'
+import { ElementsPanel } from './ElementsPanel'
+import { Layers } from './Layers'
 import { useEditorUi, type Panel } from './uiState'
 import { Variants } from './Variants'
 import { Workspace } from './Workspace'
@@ -123,8 +125,8 @@ export function Editor({ id }: { id: string }) {
   }, [id])
 
   useEffect(() => {
-    loadThemeFonts(doc.theme)
-  }, [doc.theme])
+    loadDocFonts(doc)
+  }, [doc])
 
   const onFit = useCallback((f: Fit) => setFit(f), [])
   useAtsRunner(doc, fit, lens || (medium && side === 'ats') || drawer === 'ats')
@@ -132,7 +134,13 @@ export function Editor({ id }: { id: string }) {
   if (!loaded) return <div className="ed-loading">{t('app.name')}</div>
 
   const panels = {
-    outline: <Outline doc={doc} />,
+    outline: (
+      <>
+        <ElementsPanel />
+        <Outline doc={doc} />
+        <Layers doc={doc} />
+      </>
+    ),
     inspect: <Inspector doc={doc} />,
     variants: <Variants doc={base} />,
     ats: <AtsPanel doc={doc} />,

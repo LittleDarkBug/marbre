@@ -112,3 +112,14 @@ describe('factories', () => {
     for (const t of ['identity', 'text', 'entries', 'skills', 'pairs'] as const) expect(newBlock(t).type).toBe(t)
   })
 })
+
+describe('import safety', () => {
+  it('strips scripts and handlers from rich fields on load, keeps plain text intact', () => {
+    const doc = blankDoc()
+    ;(doc.blocks[1] as { body: string }).body = '<img src=x onerror="alert(1)"><strong>ok</strong><span style="color:#ff0000">rouge</span>'
+    ;(doc.blocks[0] as { contacts: { id: string; kind: 'other'; text: string }[] }).contacts = [{ id: 'k', kind: 'other', text: 'R&D' }]
+    const loaded = load(JSON.parse(JSON.stringify(doc)))
+    expect((loaded.blocks[1] as { body: string }).body).toBe('<strong>ok</strong><span style="color: rgb(255, 0, 0);">rouge</span>')
+    expect((loaded.blocks[0] as { contacts: { text: string }[] }).contacts[0].text).toBe('R&D')
+  })
+})

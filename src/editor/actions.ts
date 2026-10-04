@@ -14,7 +14,7 @@ export function addBlock(doc: Doc, type: BlockType, heading: string, columnId?: 
   const block = newBlock(type, heading)
   doc.blocks.push(block)
   if (doc.layout.mode === 'free') {
-    doc.layout.frames[block.id] = { x: 20, y: 20, w: 120, h: 20, rotate: 0, z: 0 }
+    doc.layout.frames[block.id] = { x: 20, y: 20, w: 120, h: 20, rotate: 0, z: 0, locked: false }
     doc.layout.order.push(block.id)
     return block.id
   }
@@ -138,7 +138,7 @@ export function insertBullet(doc: Doc, blockId: string, entryId: string, after?:
 
 export function detachBlock(doc: Doc, blockId: string, frame: { x: number; y: number; w: number; h: number }) {
   for (const c of doc.layout.columns) c.blocks = c.blocks.filter((id) => id !== blockId)
-  doc.layout.frames[blockId] = { ...frame, rotate: 0, z: 0 }
+  doc.layout.frames[blockId] = { ...frame, rotate: 0, z: 0, locked: false }
   if (!doc.layout.order.includes(blockId)) doc.layout.order.push(blockId)
 }
 
@@ -146,7 +146,7 @@ export function setMode(doc: Doc, mode: 'flow' | 'free', frames: Record<string, 
   if (mode === doc.layout.mode) return
   if (mode === 'free') {
     const order = doc.layout.columns.flatMap((c) => c.blocks)
-    for (const id of order) if (frames[id]) doc.layout.frames[id] = { ...frames[id], rotate: 0, z: 0 }
+    for (const id of order) if (frames[id]) doc.layout.frames[id] = { ...frames[id], rotate: 0, z: 0, locked: false }
     doc.layout.order = [...order, ...doc.layout.order.filter((id) => !order.includes(id))]
   } else {
     const placed = new Set(doc.layout.columns.flatMap((c) => c.blocks))
@@ -170,11 +170,24 @@ export function removeColumn(doc: Doc, columnId: string) {
   doc.layout.columns[0].blocks.push(...col.blocks)
 }
 
-export function addDecor(doc: Doc, kind: Decor['kind'], icon?: string) {
+export function addDecor(doc: Doc, kind: Decor['kind'], extra: Partial<Decor> = {}, at?: { x: number; y: number }) {
   const id = uid('o')
-  const size = kind === 'rule' ? { w: 60, h: 0.6 } : kind === 'icon' ? { w: 12, h: 12 } : { w: 30, h: 30 }
+  const size = kind === 'rule' ? { w: 60, h: 0.6 } : kind === 'line' ? { w: 60, h: 4 } : kind === 'icon' ? { w: 12, h: 12 } : kind === 'qr' ? { w: 26, h: 26 } : kind === 'image' ? { w: 50, h: 40 } : { w: 30, h: 30 }
   const z = Math.max(0, ...doc.layout.decor.map((d) => d.frame.z)) + 1
-  doc.layout.decor.push({ id, kind, frame: { x: 20, y: 20, ...size, rotate: 0, z }, color: 'accent', stroke: 0.4, fill: kind !== 'ellipse', icon })
+  doc.layout.decor.push({
+    id,
+    kind,
+    frame: { x: at?.x ?? 20, y: at?.y ?? 20, ...size, rotate: 0, z, locked: false },
+    color: 'accent',
+    stroke: 0.4,
+    fill: kind !== 'ellipse',
+    radius: 0,
+    opacity: 1,
+    dash: 'solid',
+    arrow: 'none',
+    hidden: false,
+    ...extra,
+  })
   return id
 }
 

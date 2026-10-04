@@ -5,6 +5,7 @@ import { StyleCtx } from './context'
 import { nearestWeight } from './fontLibrary'
 import { stack } from './fonts'
 import { iconSvg } from './icons'
+import { decorColor, lineSvg, pathIcon, qrSvg } from './style'
 import './page.css'
 
 export const PAGE_MM = { A4: { w: 210, h: 297 }, Letter: { w: 215.9, h: 279.4 } } as const
@@ -18,7 +19,9 @@ function vars(doc: Doc): CSSProperties {
   const size = PAGE_MM[doc.page.format]
   return {
     '--mb-w': `${size.w}mm`,
-    '--mb-h': `${size.h}mm`,
+    '--mb-h': `${size.h * (doc.page.count ?? 1)}mm`,
+    ...(doc.page.background ? { background: doc.page.background } : {}),
+    ...(doc.page.backgroundImage ? { backgroundImage: `url("${doc.page.backgroundImage}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}),
     '--mb-ink': t.colors.ink,
     '--mb-accent': t.colors.accent,
     '--mb-paper': t.colors.paper,
@@ -66,8 +69,9 @@ function measure(page: HTMLElement, doc: Doc): Fit {
     columns.push({ id: col.dataset.col!, slack: Math.round(col.clientHeight - pad - used) })
   }
   const pageH = PAGE_MM[doc.page.format].h * MM
-  const pages = Math.max(1, Math.ceil((page.scrollHeight - 1) / pageH))
-  const overflow = doc.page.fit === 'one' ? columns.some((c) => c.slack < 0) || page.scrollHeight > pageH + 1 : false
+  const count = doc.page.count ?? 1
+  const pages = Math.max(count, Math.ceil((page.scrollHeight - 1) / pageH))
+  const overflow = doc.page.fit === 'one' ? columns.some((c) => c.slack < 0) || page.scrollHeight > pageH * count + 1 : false
   return { columns, pages, overflow }
 }
 
@@ -120,27 +124,39 @@ export function Page({ doc, onFit, className }: { doc: Doc; onFit?: (fit: Fit) =
       data-headings={doc.theme.headings}
       data-bullets={doc.theme.bullets}
     >
-      {doc.layout.decor.map((d) => (
-        <div
-          key={d.id}
-          className={`mb-decor mb-decor-${d.kind}`}
-          aria-hidden="true"
-          data-decor={d.id}
-          style={{
-            left: `${d.frame.x}mm`,
-            top: `${d.frame.y}mm`,
-            width: `${d.frame.w}mm`,
-            height: `${d.frame.h}mm`,
-            transform: d.frame.rotate ? `rotate(${d.frame.rotate}deg)` : undefined,
-            zIndex: d.frame.z,
-            color: d.color === 'accent' ? 'var(--mb-accent)' : d.color === 'ink' ? 'var(--mb-ink)' : d.color === 'panel' ? 'var(--mb-panel)' : d.color,
-            borderWidth: d.kind === 'rect' || d.kind === 'ellipse' ? `${d.stroke}mm` : undefined,
-            background: (d.kind === 'rect' || d.kind === 'ellipse') && d.fill ? 'currentColor' : undefined,
-            backgroundImage: d.kind === 'image' && d.src ? `url("${d.src}")` : undefined,
-          }}
-          dangerouslySetInnerHTML={d.kind === 'icon' && d.icon ? { __html: iconSvg(d.icon) } : undefined}
-        />
-      ))}
+      {className?.includes('is-editing') &&
+        Array.from({ length: Math.max(0, (doc.page.count ?? 1) - 1) }, (_, i) => (
+          <div key={`break${i}`} className="mb-break" aria-hidden="true" style={{ top: `${PAGE_MM[doc.page.format].h * (i + 1)}mm` }} />
+        ))}
+      {doc.layout.decor.filter((d) => !d.hidden).map((d) => {
+        const shape = d.kind === 'rect' || d.kind === 'ellipse'
+        const html = d.kind === 'icon' ? (d.src ? pathIcon(d.src) : d.icon ? iconSvg(d.icon) : undefined) : d.kind === 'line' ? lineSvg(d) : d.kind === 'qr' ? qrSvg(d.text ?? '') : undefined
+        return (
+          <div
+            key={d.id}
+            className={`mb-decor mb-decor-${d.kind}`}
+            aria-hidden="true"
+            data-decor={d.id}
+            style={{
+              left: `${d.frame.x}mm`,
+              top: `${d.frame.y}mm`,
+              width: `${d.frame.w}mm`,
+              height: `${d.frame.h}mm`,
+              transform: d.frame.rotate ? `rotate(${d.frame.rotate}deg)` : undefined,
+              zIndex: d.frame.z,
+              opacity: d.opacity < 1 ? d.opacity : undefined,
+              color: decorColor(d.color),
+              borderWidth: shape && d.stroke ? `${d.stroke}mm` : undefined,
+              borderColor: shape ? decorColor(d.strokeColor) ?? 'currentColor' : undefined,
+              borderStyle: shape && d.dash !== 'solid' ? d.dash : undefined,
+              borderRadius: d.kind === 'ellipse' ? '50%' : d.radius ? `${d.radius}mm` : undefined,
+              background: shape && d.fill ? 'currentColor' : undefined,
+              backgroundImage: d.kind === 'image' && d.src ? `url("${d.src}")` : undefined,
+            }}
+            dangerouslySetInnerHTML={html ? { __html: html } : undefined}
+          />
+        )
+      })}
       {cols.length > 0 && (
         <div className="mb-flow" style={{ gridTemplateColumns: template(cols) }}>
           {cols.map((col, i) => (
@@ -169,7 +185,8 @@ export function Page({ doc, onFit, className }: { doc: Doc; onFit?: (fit: Fit) =
               left: `${f.x}mm`,
               top: `${f.y}mm`,
               width: `${f.w}mm`,
-              minHeight: `${f.h}mm`,
+              minHeight: b.type === 'photo' ? undefined : `${f.h}mm`,
+              height: b.type === 'photo' ? `${f.h}mm` : undefined,
               transform: f.rotate ? `rotate(${f.rotate}deg)` : undefined,
               zIndex: f.z + 1,
             }}

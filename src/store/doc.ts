@@ -13,6 +13,9 @@ type State = {
   past: Doc[]
   future: Doc[]
   selection: Selection
+  multi: string[]
+  toggleMulti: (key: string) => void
+  setMulti: (keys: string[]) => void
   open: (doc: Doc) => void
   edit: (recipe: (draft: Doc) => void, opts?: { merge?: string }) => void
   editBase: (recipe: (draft: Doc) => void) => void
@@ -32,7 +35,14 @@ export const useDoc = create<State>((set, get) => ({
   past: [],
   future: [],
   selection: null,
-  open: (doc) => set({ base: doc, variantId: null, past: [], future: [], selection: null }),
+  multi: [],
+  toggleMulti: (key) => {
+    const { multi } = get()
+    const next = multi.includes(key) ? multi.filter((k) => k !== key) : [...multi, key]
+    set({ multi: next, selection: next.length ? { blockId: next[next.length - 1] } : null })
+  },
+  setMulti: (keys) => set({ multi: keys, selection: keys.length ? { blockId: keys[keys.length - 1] } : null }),
+  open: (doc) => set({ base: doc, variantId: null, past: [], future: [], selection: null, multi: [] }),
   edit: (recipe, opts) => {
     const { base, variantId, past } = get()
     const next = produce(resolve(base, variantId), recipe)
@@ -56,7 +66,7 @@ export const useDoc = create<State>((set, get) => ({
     const [next, ...rest] = future
     if (next) set({ base: next, past: [...past, base], future: rest })
   },
-  select: (selection) => set({ selection }),
+  select: (selection) => set({ selection, multi: selection && !selection.itemId ? [selection.blockId] : [] }),
   setVariant: (variantId) => set({ variantId, selection: null }),
   addVariant: (name, lang) => {
     const id = uid('v')

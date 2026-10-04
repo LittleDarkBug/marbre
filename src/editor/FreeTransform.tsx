@@ -47,7 +47,7 @@ export function FreeTransform({ doc, scale, label }: { doc: Doc; scale: number; 
     setTarget(found && key ? { ...found, key } : null)
   }, [doc, key])
 
-  if (!target) return null
+  if (!target || target.frame.locked) return null
   const decor = isDecorKey(target.key)
   const gripSize = (coarse ? 40 : 22) / scale
   const placeGrip = (left: number, top: number) => {

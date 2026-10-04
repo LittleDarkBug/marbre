@@ -50,7 +50,7 @@ export function sampleBlocks(lang: Lang = 'fr'): Block[] {
   const t = T[lang]
   return [
     {
-      id: 'id', type: 'identity', heading: '', hidden: false,
+      id: 'id', type: 'identity', heading: '', hidden: false, style: {},
       name: 'Camille Martin',
       title: t.title,
       highlights: [
@@ -65,24 +65,24 @@ export function sampleBlocks(lang: Lang = 'fr'): Block[] {
         { id: 'c4', kind: 'github', text: 'github.com/camille-example', href: 'https://github.com/camille-example' },
       ],
     },
-    { id: 'profile', type: 'text', heading: t.profile, hidden: false, body: t.profileBody },
+    { id: 'profile', type: 'text', heading: t.profile, hidden: false, style: {}, body: t.profileBody },
     {
-      id: 'xp', type: 'entries', heading: t.xp, hidden: false, kind: 'experience',
+      id: 'xp', type: 'entries', heading: t.xp, hidden: false, style: {}, kind: 'experience',
       items: [
         { id: 'x1', title: t.x1[0], subtitle: '', org: t.x1[1], meta: t.x1[2], dates: t.x1[3], tags: '', body: '', bullets: [{ id: 'x1a', text: t.x1a }, { id: 'x1b', text: t.x1b }] },
         { id: 'x2', title: t.x2[0], subtitle: '', org: t.x2[1], meta: t.x2[2], dates: t.x2[3], tags: '', body: '', bullets: [{ id: 'x2a', text: t.x2a }] },
       ],
     },
     {
-      id: 'proj', type: 'entries', heading: t.proj, hidden: false, kind: 'project',
+      id: 'proj', type: 'entries', heading: t.proj, hidden: false, style: {}, kind: 'project',
       items: [{ id: 'p1', title: t.p1[0], subtitle: '', org: '', meta: '', dates: '', tags: 'Prophet, FastAPI', body: t.p1[1], bullets: [] }],
     },
-    { id: 'skills', type: 'skills', heading: t.skills, hidden: false, groups: t.g.map(([label, items], i) => ({ id: `g${i + 1}`, label, items })) },
+    { id: 'skills', type: 'skills', heading: t.skills, hidden: false, style: {}, groups: t.g.map(([label, items], i) => ({ id: `g${i + 1}`, label, items })) },
     {
-      id: 'edu', type: 'entries', heading: t.edu, hidden: false, kind: 'education',
+      id: 'edu', type: 'entries', heading: t.edu, hidden: false, style: {}, kind: 'education',
       items: [{ id: 'e1', title: t.e1[0], subtitle: t.e1[1], org: t.e1[2], meta: '', dates: '2022 – 2024', tags: '', body: '', bullets: [] }],
     },
-    { id: 'langs', type: 'pairs', heading: t.langs, hidden: false, items: t.l.map(([key, value], i) => ({ id: `l${i + 1}`, key, value })) },
+    { id: 'langs', type: 'pairs', heading: t.langs, hidden: false, style: {}, items: t.l.map(([key, value], i) => ({ id: `l${i + 1}`, key, value })) },
   ]
 }
 

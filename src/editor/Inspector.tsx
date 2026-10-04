@@ -1,5 +1,5 @@
 import { useT } from '../i18n'
-import type { Block, Contact, Doc, FontRole, Frame, IdentityBlock } from '../model/schema'
+import type { Block, Contact, Doc, FontRole, IdentityBlock } from '../model/schema'
 import { uid } from '../model/ids'
 import { FONTS, fontSpec } from '../render/fontLibrary'
 import { loadFamily } from '../render/fonts'
@@ -8,6 +8,7 @@ import { useDoc } from '../store/doc'
 import { Btn, ColorField, Field, Scrub, Section, Segmented } from '../ui/kit'
 import { addColumn, removeColumn, setMode } from './actions'
 import { currentScale, pageEl, pageRect } from './geometry'
+import { BlockStylePanel, FreePanel, NotePanel, PagePanel, PhotoPanel, RatingPanel } from './InspectorExtras'
 
 const CATEGORY_ORDER = ['sans', 'condensed', 'serif', 'mono'] as const
 
@@ -205,7 +206,7 @@ function BlockPanel({ block }: { block: Block }) {
   return (
     <>
       <Section title={t(`block.${block.type}`)} aside={<Btn label={t('insp.document')} showLabel onClick={() => select(null)} />}>
-        {block.type !== 'identity' && (
+        {block.type !== 'identity' && block.type !== 'note' && block.type !== 'photo' && (
           <Field label={t('hint.heading')}>
             <input type="text" value={block.heading} onChange={(e) => edit((d) => { at(d).heading = e.target.value }, { merge: `${block.id}-h` })} />
           </Field>
@@ -220,19 +221,6 @@ function BlockPanel({ block }: { block: Block }) {
         <Btn label={t(block.hidden ? 'insp.show' : 'insp.hide')} icon={block.hidden ? 'eye' : 'eye-slash'} showLabel onClick={() => edit((d) => { at(d).hidden = !block.hidden })} />
       </Section>
       {block.type === 'identity' && <IdentityPanel block={block} />}
-    </>
-  )
-}
-
-const FRAME_KEYS = ['x', 'y', 'w', 'h', 'rotate'] as const
-
-function FrameScrubs({ frame, onChange }: { frame: Frame; onChange: (k: (typeof FRAME_KEYS)[number], v: number) => void }) {
-  const t = useT()
-  return (
-    <>
-      {FRAME_KEYS.map((k) => (
-        <Scrub key={k} label={t(`frame.${k}`)} unit={k === 'rotate' ? 'deg' : 'mm'} step={k === 'rotate' ? 1 : 0.5} min={k === 'rotate' ? -180 : 0} max={k === 'rotate' ? 180 : 300} value={frame[k]} onChange={(v) => onChange(k, v)} />
-      ))}
     </>
   )
 }
@@ -269,39 +257,67 @@ function DecorPanel({ doc, id }: { doc: Doc; id: string }) {
           </select>
         </Field>
       )}
-      <FrameScrubs frame={decor.frame} onChange={(k, v) => edit((d) => { at(d).frame[k] = v }, { merge: `${id}${k}` })} />
+      {(decor.kind === 'rect' || decor.kind === 'image') && <Scrub label={t('style.radius')} unit="mm" step={0.5} min={0} max={60} value={decor.radius} onChange={(v) => edit((d) => { at(d).radius = v }, { merge: `${id}r` })} />}
+      {(decor.kind === 'rect' || decor.kind === 'ellipse') && <ColorField label={t('style.borderColor')} value={decor.strokeColor && decor.strokeColor.startsWith('#') ? decor.strokeColor : '#111111'} onChange={(v) => edit((d) => { at(d).strokeColor = v }, { merge: `${id}sc` })} />}
+      {(decor.kind === 'line' || decor.kind === 'rect' || decor.kind === 'ellipse') && (
+        <Field label={t('decor.dash')}>
+          <Segmented label={t('decor.dash')} value={decor.dash} options={(['solid', 'dashed', 'dotted'] as const).map((v) => ({ value: v, label: t(`decor.dash.${v}`) }))} onChange={(v) => edit((d) => { at(d).dash = v })} />
+        </Field>
+      )}
+      {decor.kind === 'line' && (
+        <>
+          <Scrub label={t('decor.stroke')} unit="mm" step={0.1} min={0.1} max={5} value={decor.stroke} onChange={(v) => edit((d) => { at(d).stroke = v }, { merge: `${id}s` })} />
+          <Field label={t('decor.arrow')}>
+            <Segmented label={t('decor.arrow')} value={decor.arrow} options={(['none', 'end', 'both'] as const).map((v) => ({ value: v, label: t(`decor.arrow.${v}`) }))} onChange={(v) => edit((d) => { at(d).arrow = v })} />
+          </Field>
+        </>
+      )}
+      {decor.kind === 'qr' && (
+        <Field label={t('decor.qrText')}>
+          <input type="text" value={decor.text ?? ''} onChange={(e) => edit((d) => { at(d).text = e.target.value }, { merge: `${id}q` })} />
+        </Field>
+      )}
+      <Scrub label={t('style.opacity')} step={0.05} min={0.05} max={1} value={decor.opacity} onChange={(v) => edit((d) => { at(d).opacity = v }, { merge: `${id}o` })} />
       <p className="insp-note">{t('decor.note')}</p>
-    </Section>
-  )
-}
-
-function FramePanel({ doc, id }: { doc: Doc; id: string }) {
-  const t = useT()
-  const edit = useDoc((s) => s.edit)
-  const frame = doc.layout.frames[id]
-  if (!frame) return null
-  return (
-    <Section title={t('frame.title')}>
-      <FrameScrubs frame={frame} onChange={(k, v) => edit((d) => { d.layout.frames[id][k] = v }, { merge: `${id}${k}` })} />
-      {frame.rotate !== 0 && <p className="insp-note">{t('frame.rotateWarning')}</p>}
     </Section>
   )
 }
 
 export function Inspector({ doc }: { doc: Doc }) {
   const selection = useDoc((s) => s.selection)
+  const multi = useDoc((s) => s.multi)
+  if (multi.length > 1) {
+    return (
+      <div className="insp">
+        <FreePanel doc={doc} keys={multi} />
+      </div>
+    )
+  }
   if (selection && selection.blockId.startsWith('decor:')) {
     return (
       <div className="insp">
         <DecorPanel doc={doc} id={selection.blockId.slice(6)} />
+        <FreePanel doc={doc} keys={[selection.blockId]} />
       </div>
     )
   }
   const block = selection ? doc.blocks.find((b) => b.id === selection.blockId) : null
+  if (!block) {
+    return (
+      <div className="insp">
+        <DocumentPanel doc={doc} />
+        <PagePanel doc={doc} />
+      </div>
+    )
+  }
   return (
     <div className="insp">
-      {block ? <BlockPanel block={block} /> : <DocumentPanel doc={doc} />}
-      {block && doc.layout.frames[block.id] && <FramePanel doc={doc} id={block.id} />}
+      <BlockPanel block={block} />
+      {block.type === 'note' && <NotePanel block={block} />}
+      {block.type === 'photo' && <PhotoPanel block={block} />}
+      {block.type === 'rating' && <RatingPanel block={block} />}
+      {doc.layout.frames[block.id] && <FreePanel doc={doc} keys={[block.id]} />}
+      <BlockStylePanel block={block} />
     </div>
   )
 }
