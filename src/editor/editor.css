@@ -61,7 +61,7 @@
 
 .ed-main { grid-area: main; position: relative; min-height: 0; min-width: 0; }
 
-.ed-dock { grid-area: dock; display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--ink); padding-bottom: env(safe-area-inset-bottom); }
+.ed-dock { grid-area: dock; display: grid; grid-template-columns: repeat(6, 1fr); border-top: 1px solid var(--ink); padding-bottom: env(safe-area-inset-bottom); }
 .ed-dock-btn { border: 0; background: transparent; min-height: var(--tap); font-size: 12px; font-weight: 500; font-variant-caps: all-small-caps; letter-spacing: 0.05em; cursor: pointer; }
 .ed-dock-btn + .ed-dock-btn { border-left: 1px solid color-mix(in srgb, var(--ink) 25%, transparent); }
 .ed-dock-btn:active { background: var(--ink); color: var(--stone); }
@@ -211,3 +211,10 @@
 button.ats-msg { cursor: pointer; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--ink) 35%, transparent); }
 .ats-text { margin: 8px 0 0; padding: 10px; max-height: 420px; overflow: auto; border: 1px solid color-mix(in srgb, var(--ink) 30%, transparent); font-family: var(--mono); font-size: 11.5px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
 .ats .ui-seg { margin-bottom: 6px; flex-wrap: wrap; }
+
+.proof-excerpt { display: block; margin-top: 2px; font-family: var(--mono); font-size: 11px; color: var(--ink-2); quotes: none; }
+.proof-score { margin: 8px 0 4px; font-family: var(--mono); font-size: 12px; }
+.proof-keywords { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+.proof-keywords li { padding: 2px 6px; border: 1px solid var(--ink); font-size: 12px; }
+.proof-keywords li.is-missing { border-color: var(--proof); color: var(--proof); text-decoration: line-through; text-decoration-thickness: 1px; }
+.ui-field textarea { resize: vertical; font-family: var(--mono); font-size: 12.5px; }

@@ -15,6 +15,7 @@ import { useEditorUi, type Panel } from './uiState'
 import { Variants } from './Variants'
 import { Workspace } from './Workspace'
 import { AtsPanel } from '../ats/AtsPanel'
+import { ProofPanel } from '../proof/ProofPanel'
 import { useAtsRunner } from '../ats/store'
 import './editor.css'
 
@@ -78,11 +79,12 @@ function FitGauge({ fit }: { fit: Fit | null }) {
   )
 }
 
-const DRAWERS: { id: Exclude<Panel, null>; key: Key; icon: 'rows' | 'sliders-horizontal' | 'squares-four' | 'scan' | 'download-simple' }[] = [
+const DRAWERS: { id: Exclude<Panel, null>; key: Key; icon: 'rows' | 'sliders-horizontal' | 'squares-four' | 'scan' | 'check' | 'download-simple' }[] = [
   { id: 'outline', key: 'panel.outline', icon: 'rows' },
   { id: 'inspect', key: 'panel.inspect', icon: 'sliders-horizontal' },
   { id: 'variants', key: 'panel.variants', icon: 'squares-four' },
   { id: 'ats', key: 'panel.ats', icon: 'scan' },
+  { id: 'proof', key: 'panel.proof', icon: 'check' },
   { id: 'export', key: 'panel.export', icon: 'download-simple' },
 ]
 
@@ -94,7 +96,7 @@ export function Editor({ id }: { id: string }) {
   const setVariant = useDoc((s) => s.setVariant)
   const { undo, redo, past, future } = useDoc()
   const [fit, setFit] = useState<Fit | null>(null)
-  const [side, setSide] = useState<'inspect' | 'ats' | 'variants' | 'export'>('inspect')
+  const [side, setSide] = useState<'inspect' | 'ats' | 'proof' | 'variants' | 'export'>('inspect')
   const drawer = useEditorUi((s) => s.drawer)
   const openDrawer = useEditorUi((s) => s.openDrawer)
   const lens = useEditorUi((s) => s.lens)
@@ -134,6 +136,7 @@ export function Editor({ id }: { id: string }) {
     inspect: <Inspector doc={doc} />,
     variants: <Variants doc={base} />,
     ats: <AtsPanel doc={doc} />,
+    proof: <ProofPanel key={`${base.id}-${variantId}`} doc={doc} />,
     export: <ExportPanel doc={doc} />,
   }
 
@@ -180,7 +183,7 @@ export function Editor({ id }: { id: string }) {
       {medium && (
         <aside className="ed-right" aria-label={t('panel.inspect')}>
           <nav className="ed-tabs" aria-label={t('ed.panels')}>
-            {(['inspect', 'variants', 'ats', 'export'] as const).map((p) => (
+            {(['inspect', 'variants', 'ats', 'proof', 'export'] as const).map((p) => (
               <button key={p} type="button" aria-pressed={side === p} className="ed-tab" onClick={() => setSide(p)}>
                 {t(`panel.${p}`)}
               </button>

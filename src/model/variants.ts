@@ -77,7 +77,7 @@ function diffInto(a: Json, b: Json, path: string[], out: Override[]) {
   if (JSON.stringify(a) !== JSON.stringify(b)) out.push({ path, op: 'set', value: clone(b) })
 }
 
-const VARIANT_SCOPE = ['blocks', 'theme', 'layout', 'page'] as const
+const VARIANT_SCOPE = ['blocks', 'theme', 'layout', 'page', 'rules'] as const
 
 export function diff(base: Doc, edited: Doc): Override[] {
   const out: Override[] = []
