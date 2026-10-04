@@ -60,7 +60,7 @@
 
 .ed-main { grid-area: main; position: relative; min-height: 0; min-width: 0; }
 
-.ed-dock { grid-area: dock; display: grid; grid-template-columns: repeat(6, 1fr); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
+.ed-dock { grid-area: dock; display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
 .ed-dock-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 0; background: transparent; min-height: var(--tap); min-width: 0; padding: 4px 2px; font-size: 11px; font-weight: 500; line-height: 1.1; color: var(--ink-2); cursor: pointer; }
 .ed-dock-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ed-dock-btn:active { background: var(--stone-2); color: var(--ink); }
@@ -262,3 +262,6 @@ button.ats-msg { cursor: pointer; text-decoration: underline; text-decoration-th
 .fmt-custom { position: relative; overflow: hidden; background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red); }
 .fmt-custom input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 .fmt-u { text-decoration: underline; }
+
+.ws-lasso { position: absolute; z-index: 20; border: 1px solid #111; background: rgba(17, 17, 17, 0.06); pointer-events: none; }
+.mb-page.is-editing .mb-photo-empty { border: 0; background: color-mix(in srgb, var(--mb-accent) 12%, #fff); font: inherit; font-size: 11px; color: var(--mb-accent); }

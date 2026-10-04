@@ -8,6 +8,7 @@ Everything runs in the browser. There is no account and no server: your CVs stay
 
 ## What it does
 
+- **Design freedom.** Add free text boxes, photos (cropped, round or rounded), shapes, lines and arrows, a QR code and 1,500 icons anywhere on the page. Style any block (font, size, colours, background, border, radius, alignment, opacity), use several pages, a background colour or image, layers, locking, alignment tools, multi-selection and keyboard shortcuts.
 - **Two editing modes.** In structured mode you type directly on the page and the layout follows: columns, sections, entries, bullets. In free mode every block is placed to the millimetre with handles, snapping and rotation, and a reading thread fixes the order hiring software will follow.
 - **ATS lens.** Marbre measures the rendered page and simulates three readers:
   - **Document order:** what pypdf, xpdf in raw mode and most parsers follow.
@@ -17,7 +18,7 @@ Everything runs in the browser. There is no account and no server: your CVs stay
   Problems show up as proof marks in the margin: columns mixed together, a date attached to the wrong block, text that is too small, low contrast, an overflowing page.
 - **Variants.** A variant adapts the base CV to a job offer or a language and stores only what changes. Proofing checks the keywords of each offer.
 - **Proofing.** Words to avoid, emoji, French non-breaking spaces, double spaces, brackets.
-- **Templates.** Five templates, each one exported and checked by the test suite: Signal, One column, Swiss grid, Editorial, Technical.
+- **Templates.** Seven templates, each one exported and checked by the test suite: Signal, One column, Swiss grid, Editorial, Technical, Portrait, Poster.
 - **Open formats.** Native `.marbre.json` files, plus JSON Resume import and export.
 
 ## Why the ATS lens can be trusted

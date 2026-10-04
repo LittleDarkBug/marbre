@@ -11,6 +11,7 @@ import { Wordmark } from '../ui/Wordmark'
 import { ExportPanel, printDoc } from './ExportPanel'
 import { Inspector } from './Inspector'
 import { Outline } from './Outline'
+import { useShortcuts } from './shortcuts'
 import { ElementsPanel } from './ElementsPanel'
 import { Layers } from './Layers'
 import { useEditorUi, type Panel } from './uiState'
@@ -39,29 +40,6 @@ function useAutosave() {
   }, [])
 }
 
-function useShortcuts() {
-  useEffect(() => {
-    const key = (e: KeyboardEvent) => {
-      const mod = e.metaKey || e.ctrlKey
-      const editing = (e.target as HTMLElement)?.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)
-      if (mod && e.key.toLowerCase() === 'z' && !editing) {
-        e.preventDefault()
-        if (e.shiftKey) useDoc.getState().redo()
-        else useDoc.getState().undo()
-      } else if (mod && e.key.toLowerCase() === 'y' && !editing) {
-        e.preventDefault()
-        useDoc.getState().redo()
-      } else if (mod && e.key.toLowerCase() === 'p') {
-        e.preventDefault()
-        const s = useDoc.getState()
-        printDoc(s.base, s.variantId)
-      } else if (e.key === 'Escape' && !editing) useDoc.getState().select(null)
-    }
-    window.addEventListener('keydown', key)
-    return () => window.removeEventListener('keydown', key)
-  }, [])
-}
-
 function FitGauge({ fit }: { fit: Fit | null }) {
   const t = useT()
   if (!fit) return null
@@ -81,7 +59,8 @@ function FitGauge({ fit }: { fit: Fit | null }) {
   )
 }
 
-const DRAWERS: { id: Exclude<Panel, null>; key: Key; icon: 'rows' | 'sliders-horizontal' | 'squares-four' | 'scan' | 'check' | 'download-simple' }[] = [
+const DRAWERS: { id: Exclude<Panel, null>; key: Key; icon: 'plus' | 'rows' | 'sliders-horizontal' | 'squares-four' | 'scan' | 'check' | 'download-simple' }[] = [
+  { id: 'elements', key: 'panel.elements', icon: 'plus' },
   { id: 'outline', key: 'panel.outline', icon: 'rows' },
   { id: 'inspect', key: 'panel.inspect', icon: 'sliders-horizontal' },
   { id: 'variants', key: 'panel.variants', icon: 'squares-four' },
@@ -98,6 +77,7 @@ export function Editor({ id }: { id: string }) {
   const setVariant = useDoc((s) => s.setVariant)
   const { undo, redo, past, future } = useDoc()
   const [fit, setFit] = useState<Fit | null>(null)
+  const [left, setLeft] = useState<'elements' | 'outline'>('elements')
   const [side, setSide] = useState<'inspect' | 'ats' | 'proof' | 'variants' | 'export'>('inspect')
   const drawer = useEditorUi((s) => s.drawer)
   const openDrawer = useEditorUi((s) => s.openDrawer)
@@ -134,9 +114,9 @@ export function Editor({ id }: { id: string }) {
   if (!loaded) return <div className="ed-loading">{t('app.name')}</div>
 
   const panels = {
+    elements: <ElementsPanel />,
     outline: (
       <>
-        <ElementsPanel />
         <Outline doc={doc} />
         <Layers doc={doc} />
       </>
@@ -178,8 +158,15 @@ export function Editor({ id }: { id: string }) {
       </header>
 
       {wide && (
-        <aside className="ed-left" aria-label={t('panel.outline')}>
-          {panels.outline}
+        <aside className="ed-left" aria-label={t('panel.elements')}>
+          <nav className="ed-tabs" aria-label={t('ed.panels')}>
+            {(['elements', 'outline'] as const).map((p) => (
+              <button key={p} type="button" aria-pressed={left === p} className="ed-tab" onClick={() => setLeft(p)}>
+                {t(`panel.${p}`)}
+              </button>
+            ))}
+          </nav>
+          {panels[left]}
         </aside>
       )}
 
@@ -197,9 +184,14 @@ export function Editor({ id }: { id: string }) {
               </button>
             ))}
             {!wide && (
-              <button type="button" className="ed-tab" onClick={() => openDrawer('outline')}>
-                {t('panel.outline')}
-              </button>
+              <>
+                <button type="button" className="ed-tab" onClick={() => openDrawer('elements')}>
+                  {t('panel.elements')}
+                </button>
+                <button type="button" className="ed-tab" onClick={() => openDrawer('outline')}>
+                  {t('panel.outline')}
+                </button>
+              </>
             )}
           </nav>
           <div className="ed-panel">{panels[side]}</div>

@@ -35,11 +35,12 @@ function commit(key: string, patch: Partial<Frame>) {
 
 export function FreeTransform({ doc, scale, label }: { doc: Doc; scale: number; label: string }) {
   const selection = useDoc((s) => s.selection)
+  const multi = useDoc((s) => s.multi)
   const coarse = useMedia('(pointer: coarse)')
   const [target, setTarget] = useState<{ el: HTMLElement; frame: Frame; key: string } | null>(null)
   const [grip, setGrip] = useState<HTMLDivElement | null>(null)
   const gripRef = useRef<HTMLDivElement | null>(null)
-  const key = selection && !selection.itemId ? selection.blockId : null
+  const key = selection && !selection.itemId && multi.length < 2 ? selection.blockId : null
 
   useLayoutEffect(() => {
     const found = key ? targetFor(doc, key) : null

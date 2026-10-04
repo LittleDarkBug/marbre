@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-export type Panel = 'outline' | 'inspect' | 'ats' | 'proof' | 'variants' | 'export' | null
+export type Panel = 'elements' | 'outline' | 'inspect' | 'ats' | 'proof' | 'variants' | 'export' | null
 
 type EditorUi = {
   zoom: number

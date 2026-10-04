@@ -4,7 +4,7 @@ import { readPdfminer, type Char, type ReadBox } from './pdfminer'
 import type { Sample } from './measure'
 
 export type Severity = 'error' | 'warning' | 'info'
-export type IssueCode = 'interleaved' | 'order' | 'rows' | 'small' | 'rotated' | 'spaced' | 'free' | 'overflow' | 'contrast' | 'contact' | 'headings' | 'datesRight'
+export type IssueCode = 'photo' | 'rating' | 'interleaved' | 'order' | 'rows' | 'small' | 'rotated' | 'spaced' | 'free' | 'overflow' | 'contrast' | 'contact' | 'headings' | 'datesRight'
 export type Issue = { code: IssueCode; severity: Severity; block?: string; params?: Record<string, string | number> }
 export type Reading = { stream: string; miner: ReadBox[]; rows: string; streamOrder: string[]; minerOrder: string[]; issues: Issue[] }
 
@@ -112,17 +112,26 @@ export function analyze(doc: Doc, sample: Sample, fit: Fit | null): Reading {
   if (framed.length) issues.push({ code: 'free', severity: 'info', params: { n: framed.length } })
   if (fit?.overflow) issues.push({ code: 'overflow', severity: 'error' })
   if (doc.theme.datePlacement === 'right') issues.push({ code: 'datesRight', severity: 'info' })
+  for (const b of doc.blocks) {
+    if (b.hidden) continue
+    if (b.type === 'photo' && b.src) issues.push({ code: 'photo', severity: 'info', block: b.id })
+    if (b.type === 'rating' && b.display !== 'text') issues.push({ code: 'rating', severity: 'info', block: b.id })
+  }
 
   const c = doc.theme.colors
-  const panels = doc.layout.columns.some((col) => col.panel)
-  const pairs: [string, string, string][] = [
-    ['ink', c.ink, c.paper],
-    ['accent', c.accent, c.paper],
-    ...(panels ? ([['ink', c.ink, c.panel], ['accent', c.accent, c.panel]] as [string, string, string][]) : []),
-  ]
-  for (const [name, fg, bg] of pairs) {
-    const ratio = contrast(fg, bg)
-    if (ratio < 4.5) issues.push({ code: 'contrast', severity: 'warning', params: { color: name, ratio: Math.round(ratio * 10) / 10 } })
+  const inPanel = new Set(doc.layout.mode === 'flow' ? doc.layout.columns.filter((col) => col.panel).flatMap((col) => col.blocks) : [])
+  const flagged = new Set<string>()
+  for (const b of doc.blocks) {
+    if (b.hidden || b.type === 'photo') continue
+    const bg = b.style?.background || (inPanel.has(b.id) ? c.panel : doc.page.background || c.paper)
+    for (const [name, fg] of [['ink', b.style?.color || c.ink], ['accent', b.style?.accent || c.accent]] as const) {
+      const ratio = contrast(fg, bg)
+      const key = `${name}${fg}${bg}`
+      if (ratio < 4.5 && !flagged.has(key)) {
+        flagged.add(key)
+        issues.push({ code: 'contrast', severity: 'warning', block: b.id, params: { color: name, ratio: Math.round(ratio * 10) / 10 } })
+      }
+    }
   }
 
   const identity = doc.blocks.find((b) => b.type === 'identity' && !b.hidden)

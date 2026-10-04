@@ -11,6 +11,7 @@ import { placeFree } from './elements'
 import { decorKey } from './FreeTransform'
 import { currentScale, pageEl } from './geometry'
 import { pickImage, readImage } from './images'
+import { useEditorUi } from './uiState'
 
 function dropPoint(doc: Doc, w: number, h: number) {
   const page = pageEl()
@@ -47,6 +48,10 @@ export function ElementsPanel() {
   const t = useT()
   const edit = useDoc((s) => s.edit)
   const select = useDoc((s) => s.select)
+  const pick = (sel: { blockId: string }) => {
+    select(sel)
+    useEditorUi.getState().openDrawer(null)
+  }
   const [query, setQuery] = useState('')
   const [icons, setIcons] = useState<Record<string, string> | null>(null)
 
@@ -69,7 +74,7 @@ export function ElementsPanel() {
     const block = { ...(newBlock('note') as NoteBlock), role, body: t(role === 'h1' ? 'el.sample.h1' : role === 'h2' ? 'el.sample.h2' : 'el.sample.p') }
     const size = role === 'p' ? { w: 80, h: 18 } : { w: 110, h: role === 'h1' ? 22 : 14 }
     edit((d) => placeFree(d, block, dropPoint(d, size.w, size.h), size))
-    select({ blockId: block.id })
+    pick({ blockId: block.id })
   }
 
   const addPhoto = async () => {
@@ -80,7 +85,7 @@ export function ElementsPanel() {
     const w = 38
     const h = Math.round((w / ratio) * 10) / 10
     edit((d) => placeFree(d, { ...block, shape: ratio > 0.9 && ratio < 1.1 ? 'circle' : 'rounded' }, dropPoint(d, w, h), { w, h }))
-    select({ blockId: block.id })
+    pick({ blockId: block.id })
   }
 
   const addImage = async () => {
@@ -95,7 +100,7 @@ export function ElementsPanel() {
       f.w = w
       f.h = Math.round((w / ratio) * 10) / 10
     })
-    select({ blockId: decorKey(id) })
+    pick({ blockId: decorKey(id) })
   }
 
   const addShape = (kind: Decor['kind'], extra: Partial<Decor> = {}) => {
@@ -103,7 +108,7 @@ export function ElementsPanel() {
     edit((d) => {
       id = addDecor(d, kind, extra, dropPoint(d, kind === 'line' || kind === 'rule' ? 60 : 30, 30))
     })
-    select({ blockId: decorKey(id) })
+    pick({ blockId: decorKey(id) })
   }
 
   return (
@@ -166,7 +171,7 @@ export function ElementsPanel() {
                     if (b && b.type === 'rating') b.items = [{ id: `${id}a`, label: t('el.sample.lang1'), level: 4 }, { id: `${id}b`, label: t('el.sample.lang2'), level: 2 }]
                   }
                 })
-                select({ blockId: id })
+                pick({ blockId: id })
               }}
             />
           ))}

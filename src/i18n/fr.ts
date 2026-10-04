@@ -329,7 +329,7 @@ export const fr = {
   'lp.tile.files.body': 'Un dossier sur votre disque, du JSON lisible, JSON Resume en import et en export.',
   'lp.tile.cli.title': 'Ligne de commande',
   'lp.tile.cli.body': 'Une commande produit tous vos PDF et vérifie chacun.',
-  'lp.rail.title': 'Cinq gabarits pour commencer.',
+  'lp.rail.title': 'Sept gabarits pour commencer.',
   'lp.rail.sub': 'Chacun est vérifié à l’export. Tous se modifient entièrement.',
   'lp.final.title': 'Votre prochain CV commence ici.',
   'lp.final.sub': 'Libre, gratuit et sans compte. Ouvrez un exemple et remplacez le texte par le vôtre.',
@@ -355,7 +355,7 @@ export const fr = {
   'el.rounded': 'Arrondi',
   'el.arrow': 'Flèche',
   'el.icons': 'Icônes',
-  'el.search': 'Rechercher une icône (en anglais)',
+  'el.search': 'Icône, en anglais',
   'style.title': 'Style du bloc',
   'style.reset': 'Réinitialiser',
   'style.inherit': 'Comme le document',
@@ -439,6 +439,12 @@ export const fr = {
   'layers.show': 'Afficher',
   'sel.copy': 'Copier',
   'sel.paste': 'Coller',
+  'ats.issue.photo': "Photo : ignorée par les logiciels de recrutement, sans effet sur la lecture du texte.",
+  'ats.issue.rating': "Niveaux en points ou en barre : seul le libellé est extrait. Choisissez l’affichage Texte pour transmettre le niveau.",
+  'tpl.portrait': "Portrait",
+  'tpl.portrait.desc': "Photo ronde, colonne sombre, niveaux en points.",
+  'tpl.affiche': "Affiche",
+  'tpl.affiche.desc': "Mise en page libre, bande de couleur, grande photo.",
 } as const
 
 export type Key = keyof typeof fr

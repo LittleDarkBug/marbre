@@ -8,6 +8,7 @@ Tout fonctionne dans le navigateur. Pas de compte, pas de serveur : vos CV reste
 
 ## Ce qu'il fait
 
+- **Liberté de composition.** Zones de texte libres, photos (recadrées, rondes ou arrondies), formes, lignes et flèches, QR code et 1 500 icônes, placés n'importe où. Style de chaque bloc (police, taille, couleurs, fond, bordure, arrondi, alignement, opacité), plusieurs pages, couleur ou image de fond, calques, verrouillage, alignement, sélection multiple et raccourcis clavier.
 - **Deux modes d'édition.** En mode structuré, vous écrivez directement sur la page et la mise en page suit : colonnes, sections, entrées, puces. En mode libre, chaque bloc se place au millimètre avec poignées, magnétisme et rotation, et un fil de lecture fixe l'ordre que suivront les logiciels de recrutement.
 - **Lentille ATS.** Marbre mesure la page affichée et simule trois lecteurs :
   - **l'ordre du document :** celui que suivent pypdf, xpdf en mode brut et la plupart des analyseurs ;
@@ -17,7 +18,7 @@ Tout fonctionne dans le navigateur. Pas de compte, pas de serveur : vos CV reste
   Les problèmes apparaissent en marge sous forme de marques de correction : colonnes mélangées, date rattachée au mauvais bloc, texte trop petit, contraste faible, page qui déborde.
 - **Variantes.** Une variante adapte le CV de base à une offre ou à une langue, et ne garde que ce qui change. La relecture vérifie les mots-clés de chaque offre.
 - **Relecture.** Mots à éviter, emojis, espaces insécables françaises, doubles espaces, parenthèses.
-- **Gabarits.** Cinq gabarits, chacun exporté et vérifié par la suite de tests : Signal, Une colonne, Grille suisse, Éditorial, Technique.
+- **Gabarits.** Sept gabarits, chacun exporté et vérifié par la suite de tests : Signal, Une colonne, Grille suisse, Éditorial, Technique, Portrait, Affiche.
 - **Formats ouverts.** Fichiers `.marbre.json`, import et export JSON Resume.
 
 ## Pourquoi faire confiance à la lentille

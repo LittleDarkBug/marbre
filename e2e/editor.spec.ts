@@ -47,7 +47,7 @@ test('moves a section to the other column', async ({ page }) => {
 
 test('a variant changes the page without touching the base', async ({ page, isMobile }) => {
   await fromTemplate(page)
-  if (isMobile) await page.locator('.ed-dock-btn').nth(2).click()
+  if (isMobile) await page.locator('.ed-dock').getByRole('button', { name: /^variantes$|^variants$/i }).click()
   else await page.getByRole('button', { name: /^variantes$|^variants$/i }).first().click()
   await page.getByLabel(/nom de la variante|variant name/i).fill('Offre Lyon')
   await page.getByRole('button', { name: /créer|create/i }).click()
@@ -89,4 +89,34 @@ test('home lists the document and opens it', async ({ page }) => {
   await page.waitForTimeout(600)
   await page.goto('/#/')
   await expect(page.locator('.atelier-name').first()).toHaveText('Camille Martin')
+})
+
+test('adds a free text box, moves it with the keyboard and deletes it', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'keyboard flow on desktop')
+  await fromTemplate(page)
+  await page.getByRole('button', { name: /ajouter un titre|add a title/i }).click()
+  const note = page.locator('.mb-page.is-editing .mb-note')
+  await expect(note).toHaveCount(1)
+  const frame = page.locator('.mb-page.is-editing [data-frame]').last()
+  const before = (await frame.boundingBox())!
+  await page.locator('.ws').click({ position: { x: 5, y: 5 } })
+  await note.click({ position: { x: 2, y: 2 } })
+  await page.keyboard.press('Escape')
+  await note.evaluate((el) => el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })))
+  await page.keyboard.press('ArrowRight')
+  await page.keyboard.press('Shift+ArrowDown')
+  const after = (await frame.boundingBox())!
+  expect(after.x).toBeGreaterThan(before.x)
+  expect(after.y).toBeGreaterThan(before.y + 10)
+  await page.keyboard.press('Delete')
+  await expect(note).toHaveCount(0)
+})
+
+test('adds an icon and a shape from the elements panel', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'panel layout on desktop')
+  await fromTemplate(page)
+  await page.locator('.els-icon').first().click()
+  await expect(page.locator('.mb-page.is-editing .mb-decor-icon')).toHaveCount(1)
+  await page.getByRole('button', { name: /^arrondi$|^rounded$/i }).click()
+  await expect(page.locator('.mb-page.is-editing .mb-decor-rect')).toHaveCount(1)
 })

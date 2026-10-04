@@ -130,6 +130,22 @@ function ProofMarks({ doc }: { doc: Doc }) {
   )
 }
 
+function MultiCrops({ doc }: { doc: Doc }) {
+  const multi = useDoc((s) => s.multi)
+  const [rects, setRects] = useState<Rect[]>([])
+  useLayoutEffect(() => {
+    const page = pageEl()
+    if (!page || multi.length < 2) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setRects([])
+      return
+    }
+    const scale = currentScale(page)
+    setRects(multi.flatMap((k) => { const el = selectedEl({ blockId: k }); return el ? [pageRect(el, page, scale)] : [] }))
+  }, [doc, multi])
+  return <>{rects.map((r, i) => <Crop key={i} r={r} strong />)}</>
+}
+
 export function Overlay({ doc }: { doc: Doc }) {
   const rects = useSelectionRects(doc)
   const thread = useEditorUi((s) => s.thread)
@@ -142,6 +158,7 @@ export function Overlay({ doc }: { doc: Doc }) {
       <svg className="ov-svg">
         {lens && reading ? <Thread doc={doc} order={reading.minerOrder} faulty={faulty} /> : showThread && <Thread doc={doc} />}
         {lens && <ProofMarks doc={doc} />}
+        <MultiCrops doc={doc} />
         {rects.block && <Crop r={rects.block} strong={!rects.item} />}
         {rects.item && <Crop r={rects.item} strong />}
       </svg>
