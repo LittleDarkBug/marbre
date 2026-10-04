@@ -15,6 +15,7 @@ import { useEditorUi, type Panel } from './uiState'
 import { Variants } from './Variants'
 import { Workspace } from './Workspace'
 import { AtsPanel } from '../ats/AtsPanel'
+import { useAtsRunner } from '../ats/store'
 import './editor.css'
 
 function useAutosave() {
@@ -124,6 +125,7 @@ export function Editor({ id }: { id: string }) {
   }, [doc.theme])
 
   const onFit = useCallback((f: Fit) => setFit(f), [])
+  useAtsRunner(doc, fit, lens || (medium && side === 'ats') || drawer === 'ats')
 
   if (!loaded) return <div className="ed-loading">{t('app.name')}</div>
 

@@ -7,9 +7,10 @@ import '@fontsource/schibsted-grotesk/900.css'
 import '@fontsource/fragment-mono/400.css'
 import './index.css'
 import App from './App.tsx'
+import { useAts } from './ats/store'
 import { useDoc } from './store/doc'
 
-Object.assign(window, { marbre: { store: useDoc } })
+Object.assign(window, { marbre: { store: useDoc, ats: useAts } })
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

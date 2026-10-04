@@ -23,6 +23,13 @@ for (const w of widths) {
   await page.locator('[data-block="xp"] [data-item="x1"]').first().click({ position: { x: 30, y: 8 } })
   await page.waitForTimeout(300)
   await page.screenshot({ path: `${out}/editor-sel-${w}-${theme}.png` })
+  if (w >= 760) {
+    await page.keyboard.press('Escape')
+    await page.getByRole('button', { name: /lentille ats|ats lens/i }).first().click()
+    await page.getByRole('button', { name: /^lecture ats$|^ats reading$/i }).first().click()
+    await page.waitForTimeout(900)
+    await page.screenshot({ path: `${out}/editor-lens-${w}-${theme}.png` })
+  }
   await ctx.close()
 }
 await browser.close()

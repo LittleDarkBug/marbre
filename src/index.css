@@ -10,7 +10,6 @@ body {
   font-family: var(--ui);
   font-size: 15px;
   line-height: 1.45;
-  font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -25,3 +24,5 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .wordmark { display: inline-flex; align-items: center; gap: 0.38em; font-weight: 900; line-height: 1; letter-spacing: -0.01em; }
 .wordmark-reg { flex: 0 0 auto; }
+
+.ui-scrub-input, .gauge, .ol-num, .atelier-date, .var-count { font-variant-numeric: tabular-nums; }

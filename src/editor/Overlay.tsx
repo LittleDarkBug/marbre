@@ -3,7 +3,8 @@ import type { Doc } from '../model/schema'
 import { MM } from '../render/Page'
 import { useDoc } from '../store/doc'
 import { currentScale, pageEl, pageRect, selectedEl, type Rect } from './geometry'
-import { Thread } from './Thread'
+import { Thread, useBlockOrder } from './Thread'
+import { useAts } from '../ats/store'
 import { useEditorUi } from './uiState'
 
 const L = 9
@@ -111,14 +112,47 @@ function ColumnHandles({ doc }: { doc: Doc }) {
   )
 }
 
+function ProofMarks({ doc }: { doc: Doc }) {
+  const reading = useAts((s) => s.reading)
+  const rects = useBlockOrder(doc)
+  const page = pageEl()
+  if (!reading || !page) return null
+  const width = page.offsetWidth
+  const byId = new Map(rects.map((x) => [x.id, x.r]))
+  const used = new Map<string, number>()
+  return (
+    <g className="proof">
+      {reading.issues.map((issue, i) => {
+        const r = issue.block ? byId.get(issue.block) : null
+        if (!r) return null
+        const k = used.get(issue.block!) ?? 0
+        used.set(issue.block!, k + 1)
+        const y = r.y + 8 + k * 18
+        const x = width - 9
+        return (
+          <g key={i} className={`proof-mark is-${issue.severity}`}>
+            <path d={`M${r.x + r.w + 2} ${y}H${x - 8}`} />
+            <rect x={x - 8} y={y - 8} width="16" height="16" />
+            <text x={x} y={y + 3.4}>{i + 1}</text>
+          </g>
+        )
+      })}
+    </g>
+  )
+}
+
 export function Overlay({ doc }: { doc: Doc }) {
   const rects = useSelectionRects(doc)
   const thread = useEditorUi((s) => s.thread)
+  const lens = useEditorUi((s) => s.lens)
+  const reading = useAts((s) => s.reading)
   const showThread = thread || doc.layout.mode === 'free' || Object.keys(doc.layout.frames).length > 0
+  const faulty = new Set((reading?.issues ?? []).filter((i) => i.block && i.severity !== 'info').map((i) => i.block!))
   return (
     <div className="ov" aria-hidden="true">
       <svg className="ov-svg">
-        {showThread && <Thread doc={doc} />}
+        {lens && reading ? <Thread doc={doc} order={reading.minerOrder} faulty={faulty} /> : showThread && <Thread doc={doc} />}
+        {lens && <ProofMarks doc={doc} />}
         {rects.block && <Crop r={rects.block} strong={!rects.item} />}
         {rects.item && <Crop r={rects.item} strong />}
       </svg>
