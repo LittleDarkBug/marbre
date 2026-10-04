@@ -4,7 +4,12 @@ import { fileURLToPath } from 'node:url'
 import { launch } from './browser'
 import { renderDoc } from './render'
 import { serve } from './serve'
-import { verifyPdf, type Expect } from './verify'
+import { textRuns, type3Fonts, verifyPdf, type Expect } from './verify'
+import { checkLines, expectations } from '../src/ats/expect'
+import { resolve as resolveVariant } from '../src/model/variants'
+import { load } from '../src/model/migrate'
+import { diff } from '../src/model/variants'
+import { uid } from '../src/model/ids'
 
 const DIST = resolvePath(dirname(fileURLToPath(import.meta.url)), '..', 'dist')
 
@@ -46,8 +51,19 @@ async function exportCmd(args: Args) {
       writeFileSync(pdfPath, r.pdf)
       if (r.png) writeFileSync(join(out, `${stem}.png`), r.png)
       const slack = r.fit.columns.map((c) => `${c.slack}`).join(' / ')
-      console.log(`${pdfPath}  pages=${r.fit.pages}  marge=${slack}px${r.fit.overflow ? '  DEBORDEMENT' : ''}`)
-      if (r.fit.overflow) failed = true
+      const problems: string[] = []
+      if (r.fit.overflow) problems.push('page qui déborde')
+      const { pages, text } = await textRuns(r.pdf)
+      const resolved = resolveVariant(load(doc), variant)
+      if (resolved.page.fit === 'one' && pages !== 1) problems.push(`${pages} pages`)
+      const t3 = await type3Fonts(r.pdf)
+      if (t3.length) problems.push(`polices Type 3 : ${t3.join(', ')}`)
+      problems.push(...checkLines(text.split('\n'), expectations(resolved)))
+      for (const issue of r.lens?.issues ?? []) if (issue.severity === 'error') problems.push(`lecture ATS : ${issue.code}${issue.block ? ` (${issue.block})` : ''}`)
+      const warnings = (r.lens?.issues ?? []).filter((i) => i.severity === 'warning').map((i) => `${i.code}${i.block ? ` (${i.block})` : ''}`)
+      console.log(`${problems.length ? 'ECHEC' : 'OK   '}  ${pdfPath}  pages=${pages}  marge=${slack}px${warnings.length ? `  à vérifier : ${warnings.join(', ')}` : ''}`)
+      for (const p of problems) console.log(`       ${p}`)
+      if (problems.length) failed = true
     }
   } finally {
     await browser.close()
@@ -65,11 +81,27 @@ async function verifyCmd(args: Args) {
   if (!report.ok) process.exitCode = 1
 }
 
+async function variantCmd(args: Args) {
+  const [, baseFile, ...others] = args._
+  if (!baseFile || !others.length) throw new Error('usage: marbre variant base.marbre.json autre.json... [--out fichier]')
+  const base = load(JSON.parse(readFileSync(baseFile, 'utf8')))
+  for (const file of others) {
+    const other = load(JSON.parse(readFileSync(file, 'utf8')))
+    const overrides = diff(base, other)
+    const existing = base.variants.find((v) => v.name === other.name)
+    const variant = { id: existing?.id ?? uid('v'), name: other.name, lang: other.lang !== base.lang ? other.lang : undefined, overrides }
+    base.variants = existing ? base.variants.map((v) => (v.id === existing.id ? variant : v)) : [...base.variants, variant]
+    console.log(`${other.name}  ${overrides.length} différence(s)`)
+  }
+  writeFileSync(String(args.out ?? baseFile), JSON.stringify(base, null, 1))
+}
+
 const args = parseArgs(process.argv.slice(2))
-const commands: Record<string, (a: Args) => Promise<void>> = { export: exportCmd, verify: verifyCmd }
+const commands: Record<string, (a: Args) => Promise<void>> = { export: exportCmd, verify: verifyCmd, variant: variantCmd }
 const run = commands[args._[0]]
 if (!run) {
-  console.log('marbre export doc.marbre.json [--variant id | --all] [--out dossier] [--png]\nmarbre verify cv.pdf [--expect attendus.json]')
+  console.log('marbre export doc.marbre.json [--variant id | --all] [--out dossier] [--png]\nmarbre verify cv.pdf [--expect attendus.json]
+marbre variant base.marbre.json autre.json... [--out fichier]')
 } else {
   run(args).catch((e: Error) => {
     console.error(e.message)

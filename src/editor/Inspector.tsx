@@ -112,6 +112,9 @@ function DocumentPanel({ doc }: { doc: Doc }) {
           <Scrub key={k} label={t(`size.${k}`)} unit="px" step={0.1} min={7} max={k === 'name' ? 96 : 40} value={th.size[k]} onChange={(v) => edit((d) => { d.theme.size[k] = v }, { merge: `s-${k}` })} />
         ))}
         <Scrub label={t('insp.leading')} step={0.01} min={1} max={2} value={th.leading} onChange={(v) => edit((d) => { d.theme.leading = v }, { merge: 'lead' })} />
+        <Field label={t('insp.nameCase')}>
+          <Segmented label={t('insp.nameCase')} value={th.nameCase} options={[{ value: 'upper', label: t('insp.upper') }, { value: 'none', label: t('insp.asTyped') }]} onChange={(v) => edit((d) => { d.theme.nameCase = v })} />
+        </Field>
         <Field label={t('insp.case')}>
           <Segmented label={t('insp.case')} value={th.headingCase} options={[{ value: 'upper', label: t('insp.upper') }, { value: 'none', label: t('insp.asTyped') }]} onChange={(v) => edit((d) => { d.theme.headingCase = v })} />
         </Field>
@@ -124,6 +127,18 @@ function DocumentPanel({ doc }: { doc: Doc }) {
           <Segmented label={t('insp.dates')} value={th.datePlacement} options={[{ value: 'inline', label: t('insp.datesInline') }, { value: 'right', label: t('insp.datesRight') }]} onChange={(v) => edit((d) => { d.theme.datePlacement = v })} />
         </Field>
         {th.datePlacement === 'right' && <p className="insp-note">{t('insp.datesRightWarning')}</p>}
+        <Field label={t('insp.identity')}>
+          <Segmented label={t('insp.identity')} value={th.identity} options={[{ value: 'stacked', label: t('style.stacked') }, { value: 'inline', label: t('style.inline') }]} onChange={(v) => edit((d) => { d.theme.identity = v })} />
+        </Field>
+        <Field label={t('insp.entry')}>
+          <Segmented label={t('insp.entry')} value={th.entry} options={[{ value: 'stacked', label: t('style.stacked') }, { value: 'split', label: t('style.split') }]} onChange={(v) => edit((d) => { d.theme.entry = v })} />
+        </Field>
+        <Field label={t('insp.skills')}>
+          <Segmented label={t('insp.skills')} value={th.skills} options={[{ value: 'block', label: t('style.block') }, { value: 'inline', label: t('style.inline') }]} onChange={(v) => edit((d) => { d.theme.skills = v })} />
+        </Field>
+        <Field label={t('insp.pairs')}>
+          <Segmented label={t('insp.pairs')} value={th.pairs} options={[{ value: 'lines', label: t('style.lines') }, { value: 'inline', label: t('style.inline') }]} onChange={(v) => edit((d) => { d.theme.pairs = v })} />
+        </Field>
         <Field label={t('insp.rule')}>
           <select value={th.rule} onChange={(e) => edit((d) => { d.theme.rule = e.target.value as Doc['theme']['rule'] })}>
             <option value="none">{t('rule.none')}</option>

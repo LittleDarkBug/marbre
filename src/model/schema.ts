@@ -80,8 +80,13 @@ export const Theme = z.object({
   leading: z.number(),
   spacing: z.object({ section: z.number(), item: z.number(), line: z.number() }),
   headingCase: z.enum(['upper', 'none']),
+  nameCase: z.enum(['upper', 'none']).default('upper'),
   datePlacement: z.enum(['inline', 'right']),
   rule: z.enum(['none', 'under-identity', 'under-headings']),
+  identity: z.enum(['stacked', 'inline']).default('stacked'),
+  entry: z.enum(['stacked', 'split']).default('stacked'),
+  skills: z.enum(['block', 'inline']).default('block'),
+  pairs: z.enum(['lines', 'inline']).default('lines'),
 })
 
 export const Column = z.object({

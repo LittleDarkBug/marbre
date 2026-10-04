@@ -9,6 +9,9 @@ export async function loadFamily(family: string) {
   if (!spec || loaded.has(family)) return
   loaded.add(family)
   await Promise.all(Object.values(FONT_LOADERS[spec.pkg] ?? {}).map((load) => load()))
+  if (typeof document === 'undefined') return
+  const faces = [...spec.weights.map((w) => `${w} 16px '${family}'`), ...spec.italics.map((w) => `italic ${w} 16px '${family}'`)]
+  await Promise.all(faces.map((f) => document.fonts.load(f, 'AéÉàç0123456789–·').catch(() => [])))
 }
 
 export async function loadThemeFonts(theme: Theme) {

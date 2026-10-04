@@ -1,5 +1,5 @@
 import { createContext, useContext, type ElementType, type HTMLAttributes } from 'react'
-import type { Block } from '../model/schema'
+import type { Block, Theme } from '../model/schema'
 import type { Key } from '../i18n'
 import { escape } from '../model/rich'
 
@@ -28,9 +28,12 @@ export type RenderApi = {
 export const staticApi: RenderApi = {
   editable: false,
   Field: StaticField,
-  blockProps: () => ({}),
+  blockProps: (block) => ({ 'data-block': block.id }),
   itemProps: () => ({}),
 }
 
 export const RenderCtx = createContext<RenderApi>(staticApi)
 export const useRender = () => useContext(RenderCtx)
+
+export const StyleCtx = createContext<Pick<Theme, 'entry' | 'skills' | 'pairs' | 'identity'> & { lang: string }>({ entry: 'stacked', skills: 'block', pairs: 'lines', identity: 'stacked', lang: 'fr' })
+export const useStyle = () => useContext(StyleCtx)

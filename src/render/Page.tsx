@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, type CSSProperties } from 'react'
 import type { Block, Column, Doc } from '../model/schema'
 import { BlockView } from './blocks'
+import { StyleCtx } from './context'
 import { nearestWeight } from './fontLibrary'
 import { stack } from './fonts'
 import { iconSvg } from './icons'
@@ -101,6 +102,7 @@ export function Page({ doc, onFit, className }: { doc: Doc; onFit?: (fit: Fit) =
   }, [doc, onFit])
 
   return (
+    <StyleCtx.Provider value={{ ...doc.theme, lang: doc.lang }}>
     <div
       ref={ref}
       className={`mb-page ${className ?? ''}`}
@@ -109,7 +111,12 @@ export function Page({ doc, onFit, className }: { doc: Doc; onFit?: (fit: Fit) =
       data-fit={doc.page.fit}
       data-dates={doc.theme.datePlacement}
       data-case={doc.theme.headingCase}
+      data-name-case={doc.theme.nameCase}
       data-rule={doc.theme.rule}
+      data-identity={doc.theme.identity}
+      data-entry={doc.theme.entry}
+      data-skills={doc.theme.skills}
+      data-pairs={doc.theme.pairs}
     >
       {doc.layout.decor.map((d) => (
         <div
@@ -170,5 +177,6 @@ export function Page({ doc, onFit, className }: { doc: Doc; onFit?: (fit: Fit) =
         )
       })}
     </div>
+    </StyleCtx.Provider>
   )
 }

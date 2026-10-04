@@ -240,6 +240,16 @@ export const fr = {
   'ats.issue.contact': 'Ajoutez un e-mail et un téléphone : les logiciels de recrutement les cherchent en priorité.',
   'ats.issue.headings': 'Aucun titre de section courant (Expériences, Formation, Compétences) : les analyseurs s’en servent pour découper le CV.',
   'ats.issue.datesRight': 'Dates alignées à droite : surveillez les blocs signalés, elles peuvent être rattachées à la colonne voisine.',
+  'insp.identity': 'En-tête',
+  'insp.entry': 'Entrées',
+  'insp.skills': 'Compétences',
+  'insp.pairs': 'Listes courtes',
+  'style.stacked': 'Empilé',
+  'style.inline': 'En ligne',
+  'style.split': 'Réparti',
+  'style.block': 'En bloc',
+  'style.lines': 'Une par ligne',
+  'insp.nameCase': 'Nom',
 } as const
 
 export type Key = keyof typeof fr

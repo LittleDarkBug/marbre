@@ -1,5 +1,7 @@
 import type { Block, EntriesBlock, Entry, IdentityBlock, PairsBlock, SkillsBlock, TextBlock } from '../model/schema'
-import { useRender } from './context'
+import { useRender, useStyle } from './context'
+
+const useSplit = () => useStyle().entry === 'split'
 import { CONTACT_ICON, iconSvg } from './icons'
 
 const Icon = ({ name }: { name?: string }) =>
@@ -16,8 +18,10 @@ function Identity({ block }: { block: IdentityBlock }) {
   const p = ['blocks', block.id]
   return (
     <header className="mb-block mb-id" {...blockProps(block)}>
-      <Field as="h1" className="mb-name" path={[...p, 'name']} value={block.name} plain hint="hint.name" />
-      <Field as="p" className="mb-title" path={[...p, 'title']} value={block.title} plain hint="hint.title" />
+      <div className="mb-id-main">
+        <Field as="h1" className="mb-name" path={[...p, 'name']} value={block.name} plain hint="hint.name" />
+        <Field as="p" className="mb-title" path={[...p, 'title']} value={block.title} plain hint="hint.title" />
+      </div>
       {(block.highlights.length > 0 || editable) && (
         <ul className="mb-keys">
           {block.highlights.map((h) => (
@@ -53,6 +57,40 @@ function Text({ block }: { block: TextBlock }) {
       <Heading block={block} />
       <Field as="div" className="mb-text" path={['blocks', block.id, 'body']} value={block.body} multiline hint="hint.text" />
     </section>
+  )
+}
+
+function SplitEntry({ block, entry }: { block: EntriesBlock; entry: Entry }) {
+  const { Field, itemProps } = useRender()
+  const p = ['blocks', block.id, 'items', entry.id]
+  const isProject = block.kind === 'project'
+  const isEducation = block.kind === 'education'
+  return (
+    <article className={`mb-entry mb-${block.kind}`} {...itemProps(block, entry.id)}>
+      <div className="mb-row">
+        <h3 className="mb-h3">
+          <Field path={[...p, 'title']} value={entry.title} hint="hint.entry" />
+          {isEducation && entry.subtitle ? ' - ' : ''}
+          {isEducation && <Field path={[...p, 'subtitle']} value={entry.subtitle} hint="hint.subtitle" />}
+        </h3>
+        {isProject ? <Field className="mb-link" path={[...p, 'tags']} value={entry.tags} plain hint="hint.tags" /> : <Field className="mb-dates" path={[...p, 'dates']} value={entry.dates} plain hint="hint.dates" />}
+      </div>
+      {(entry.org || entry.meta) && (
+        <div className="mb-row mb-org">
+          <Field as="b" path={[...p, 'org']} value={entry.org} hint="hint.org" />
+          <Field className="mb-place" path={[...p, 'meta']} value={entry.meta} hint="hint.meta" />
+        </div>
+      )}
+      {!isEducation && <Field as="p" className="mb-sub" path={[...p, 'subtitle']} value={entry.subtitle} hint="hint.subtitle" />}
+      <Field as="p" className="mb-desc" path={[...p, 'body']} value={entry.body} multiline hint="hint.body" />
+      {entry.bullets.length > 0 && (
+        <ul className="mb-pts">
+          {entry.bullets.map((b) => (
+            <Field key={b.id} as="li" path={[...p, 'bullets', b.id, 'text']} value={b.text} hint="hint.bullet" />
+          ))}
+        </ul>
+      )}
+    </article>
   )
 }
 
@@ -96,24 +134,27 @@ function EntryView({ block, entry }: { block: EntriesBlock; entry: Entry }) {
 
 function Entries({ block }: { block: EntriesBlock }) {
   const { blockProps } = useRender()
+  const split = useSplit()
   return (
     <section className="mb-block mb-sec" {...blockProps(block)}>
       <Heading block={block} />
-      {block.items.map((e) => (
-        <EntryView key={e.id} block={block} entry={e} />
-      ))}
+      {block.items.map((e) => (split ? <SplitEntry key={e.id} block={block} entry={e} /> : <EntryView key={e.id} block={block} entry={e} />))}
     </section>
   )
 }
 
 function Skills({ block }: { block: SkillsBlock }) {
   const { Field, blockProps, itemProps } = useRender()
+  const style = useStyle()
+  const inline = style.skills === 'inline'
+  const colon = style.lang === 'fr' ? '\u00a0:' : ':'
   return (
     <section className="mb-block mb-sec" {...blockProps(block)}>
       <Heading block={block} />
       {block.groups.map((g) => (
         <p key={g.id} className="mb-skill" {...itemProps(block, g.id)}>
-          <Field as="strong" className="mb-k" path={['blocks', block.id, 'groups', g.id, 'label']} value={g.label} plain hint="hint.label" />{' '}
+          <Field as="strong" className="mb-k" path={['blocks', block.id, 'groups', g.id, 'label']} value={g.label} plain hint="hint.label" />
+          {inline && g.label ? <strong className="mb-k">{colon}</strong> : null}{' '}
           <Field className="mb-v" path={['blocks', block.id, 'groups', g.id, 'items']} value={g.items} plain hint="hint.items" />
         </p>
       ))}
@@ -123,6 +164,27 @@ function Skills({ block }: { block: SkillsBlock }) {
 
 function Pairs({ block }: { block: PairsBlock }) {
   const { Field, blockProps, itemProps } = useRender()
+  const style = useStyle()
+  const inline = style.pairs === 'inline'
+  const colon = style.lang === 'fr' ? '\u00a0:' : ':'
+  const sep = style.lang === 'fr' ? ' ; ' : '; '
+  if (inline) {
+    return (
+      <section className="mb-block mb-sec" {...blockProps(block)}>
+        <Heading block={block} />
+        <p className="mb-pair mb-pairs-inline">
+          {block.items.map((x, i) => (
+            <span key={x.id} {...itemProps(block, x.id)}>
+              {i > 0 ? sep : ''}
+              <Field as="strong" path={['blocks', block.id, 'items', x.id, 'key']} value={x.key} hint="hint.key" />
+              {x.key && x.value ? <strong>{colon}</strong> : null}{' '}
+              <Field path={['blocks', block.id, 'items', x.id, 'value']} value={x.value} hint="hint.value" />
+            </span>
+          ))}
+        </p>
+      </section>
+    )
+  }
   return (
     <section className="mb-block mb-sec" {...blockProps(block)}>
       <Heading block={block} />

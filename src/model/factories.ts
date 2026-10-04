@@ -9,8 +9,13 @@ export const defaultTheme = (): Theme => ({
   leading: 1.4,
   spacing: { section: 12, item: 6, line: 3 },
   headingCase: 'upper',
+  nameCase: 'upper',
   datePlacement: 'inline',
   rule: 'under-identity',
+  identity: 'stacked',
+  entry: 'stacked',
+  skills: 'block',
+  pairs: 'lines',
 })
 
 export const newEntry = (title = ''): Entry => ({

@@ -5,9 +5,11 @@ import { resolve } from '../model/variants'
 import { PAGE_MM, Page, type Fit } from '../render/Page'
 import { loadThemeFonts } from '../render/fonts'
 import { readDoc } from '../store/persist'
+import { analyze } from '../ats/analyze'
+import { samplePage } from '../ats/measure'
 import './print.css'
 
-type Injected = { __MARBRE_DOC__?: unknown; __MARBRE_READY__?: boolean; __MARBRE_FIT__?: Fit }
+type Injected = { __MARBRE_DOC__?: unknown; __MARBRE_READY__?: boolean; __MARBRE_FIT__?: Fit; __MARBRE_LENS__?: () => unknown }
 
 export function PrintView({ id, variant, auto }: { id: string; variant: string | null; auto?: boolean }) {
   const [doc, setDoc] = useState<Doc | null>(null)
@@ -33,6 +35,15 @@ export function PrintView({ id, variant, auto }: { id: string; variant: string |
     document.head.appendChild(style)
     document.title = doc.name
     return () => style.remove()
+  }, [doc])
+
+  useEffect(() => {
+    if (!doc) return
+    const target = window as unknown as Injected
+    target.__MARBRE_LENS__ = () => {
+      const page = document.querySelector<HTMLElement>('.mb-print .mb-page')
+      return page ? analyze(doc, samplePage(page), target.__MARBRE_FIT__ ?? null) : null
+    }
   }, [doc])
 
   if (!doc) return null
