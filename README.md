@@ -1,32 +1,75 @@
-# React + TypeScript + Vite
+# Marbre
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+[Lire en français](README.fr.md)
 
-Currently, two official plugins are available:
+Marbre is a free, open source CV editor. You compose the page as freely as in a layout tool, and Marbre shows what hiring software will actually read from the PDF.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Everything runs in the browser. There is no account and no server: your CVs stay in the browser or in a folder on your disk, as readable JSON.
 
-## React Compiler
+## What it does
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Two editing modes.** In structured mode you type directly on the page and the layout follows: columns, sections, entries, bullets. In free mode every block is placed to the millimetre with handles, snapping and rotation, and a reading thread fixes the order hiring software will follow.
+- **ATS lens.** Marbre measures the rendered page and simulates three readers:
+  - **Document order:** what pypdf, xpdf in raw mode and most parsers follow.
+  - **pdfminer:** a TypeScript port of the pdfminer layout analysis, the most used extraction library.
+  - **Row by row:** what pdfplumber does by default.
 
-## Expanding the Oxlint configuration
+  Problems show up as proof marks in the margin: columns mixed together, a date attached to the wrong block, text that is too small, low contrast, an overflowing page.
+- **Variants.** A variant adapts the base CV to a job offer or a language and stores only what changes. Proofing checks the keywords of each offer.
+- **Proofing.** Words to avoid, emoji, French non-breaking spaces, double spaces, brackets.
+- **Templates.** Five templates, each one exported and checked by the test suite: Signal, One column, Swiss grid, Editorial, Technical.
+- **Open formats.** Native `.marbre.json` files, plus JSON Resume import and export.
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Why the ATS lens can be trusted
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+The pdfminer port is tested against `pdfminer.six` itself. The fixtures in `src/ats/fixtures` hold the raw characters of real PDFs, together with the text boxes pdfminer.six produced from them. The port must return the same boxes in the same order.
+
+The in-browser measurement was also compared with pdfminer.six on exported PDFs, and gave the same reading order block for block.
+
+Rules learned on real CVs are built into the renderer:
+- **Fonts:** only static font files, because variable fonts get embedded as Type 3 and glue words together.
+- **Bullets:** markers are drawn rather than typed, so each bullet stays in a single text box.
+- **Dates:** placed next to their title by default.
+- **Positioning:** no positioned text in structured mode, because Chrome paints positioned elements after everything else.
+
+## Getting started
+
+```sh
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Open the address Vite prints. Pick a template, or import a `.marbre.json` or JSON Resume file.
+
+For a PDF, use Print to PDF from a Chromium browser (Chrome, Edge, Brave), with no margins and background graphics on.
+
+## Command line
+
+The CLI renders with the same engine in a headless Chrome or Edge, then checks every PDF.
+
+```sh
+npm run build
+node cli/bin.mjs export my-cv.marbre.json --all --out pdf
+node cli/bin.mjs verify pdf/my-cv.pdf
+node cli/bin.mjs variant my-cv.marbre.json offer.marbre.json
+```
+
+`export --all` produces one PDF per variant. For each PDF it checks:
+- the page count;
+- the absence of Type 3 fonts;
+- that every title, date and bullet starts its own line in the extracted text;
+- the ATS lens verdict.
+
+## Development
+
+```sh
+npm run check   # lint, types, unit tests
+npm run e2e     # Playwright, desktop and mobile
+npm run fonts   # regenerate font loaders after editing src/render/fontLibrary.ts
+```
+
+Read `AGENTS.md` and `DESIGN.md` before contributing. Comments are one line at most and a lint rule enforces it.
+
+## Licence
+
+MIT
