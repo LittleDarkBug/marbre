@@ -100,8 +100,13 @@ const args = parseArgs(process.argv.slice(2))
 const commands: Record<string, (a: Args) => Promise<void>> = { export: exportCmd, verify: verifyCmd, variant: variantCmd }
 const run = commands[args._[0]]
 if (!run) {
-  console.log('marbre export doc.marbre.json [--variant id | --all] [--out dossier] [--png]\nmarbre verify cv.pdf [--expect attendus.json]
-marbre variant base.marbre.json autre.json... [--out fichier]')
+  console.log(
+    [
+      'marbre export doc.marbre.json [--variant id | --all] [--out dossier] [--png]',
+      'marbre verify cv.pdf [--expect attendus.json]',
+      'marbre variant base.marbre.json autre.json... [--out fichier]',
+    ].join('\n'),
+  )
 } else {
   run(args).catch((e: Error) => {
     console.error(e.message)
