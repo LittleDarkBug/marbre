@@ -6,7 +6,7 @@ import { loadThemeFonts } from '../render/fonts'
 import { useDoc, useResolved } from '../store/doc'
 import { readDoc, saveDoc, writeToFolder } from '../store/persist'
 import { useTheme } from '../app/theme'
-import { Btn, Drawer, useMedia } from '../ui/kit'
+import { Btn, Drawer, Icon, useMedia } from '../ui/kit'
 import { Wordmark } from '../ui/Wordmark'
 import { ExportPanel, printDoc } from './ExportPanel'
 import { Inspector } from './Inspector'
@@ -201,7 +201,8 @@ export function Editor({ id }: { id: string }) {
       {!medium && (
         <nav className="ed-dock" aria-label={t('ed.panels')}>
           {DRAWERS.map((d) => (
-            <button key={d.id} type="button" className="ed-dock-btn" onClick={() => openDrawer(d.id)}>
+            <button key={d.id} type="button" className="ed-dock-btn" aria-label={t(d.key)} onClick={() => openDrawer(d.id)}>
+              <Icon name={d.icon} size={18} />
               <span className="ed-dock-label">{t(d.key)}</span>
             </button>
           ))}
