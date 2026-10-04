@@ -1,0 +1,33 @@
+:root {
+  --stone: #d8d2c6;
+  --stone-2: #cbc4b6;
+  --ink: #15120e;
+  --ink-2: #4a443b;
+  --paper: #fbfaf7;
+  --proof: #c8321a;
+  --ui: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  --mono: 'Fragment Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --hair: 1px solid var(--ink);
+  --tap: 44px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --stone: #121110;
+    --stone-2: #1c1a17;
+    --ink: #e9e4d9;
+    --ink-2: #b5aea1;
+    --proof: #ff6a4d;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --stone: #121110;
+  --stone-2: #1c1a17;
+  --ink: #e9e4d9;
+  --ink-2: #b5aea1;
+  --proof: #ff6a4d;
+  color-scheme: dark;
+}
