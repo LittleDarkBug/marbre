@@ -22,7 +22,7 @@ for (const w of widths) {
   await page.locator('.atelier-templates').scrollIntoViewIfNeeded()
   await page.waitForTimeout(900)
   await page.screenshot({ path: `${out}/home-tpl-${w}-${theme}.png`, fullPage: false })
-  await page.locator('.tpl').first().click()
+  await page.locator('.rail-card').first().click()
   await page.waitForSelector('.mb-page.is-editing')
   await page.waitForTimeout(800)
   await page.screenshot({ path: `${out}/editor-${w}-${theme}.png` })

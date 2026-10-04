@@ -1,13 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { go } from '../app/router'
 import { useT, useUiLang } from '../i18n'
 import { blankDoc } from '../model/factories'
 import type { Doc } from '../model/schema'
 import { useDoc } from '../store/doc'
 import { canOpenFolder, listDocs, openFolder, parseFile, removeDoc, saveDoc, type DocMeta } from '../store/persist'
-import { TEMPLATES } from '../templates'
 import { Btn } from '../ui/kit'
-import { Thumb } from '../landing/Thumb'
 
 export async function openNew(doc: Doc) {
   await saveDoc(doc)
@@ -21,7 +19,6 @@ export function Atelier() {
   const [docs, setDocs] = useState<DocMeta[] | null>(null)
   const [error, setError] = useState('')
   const input = useRef<HTMLInputElement>(null)
-  const previews = useMemo(() => TEMPLATES.map((tpl) => tpl.make(lang)), [lang])
 
   useEffect(() => {
     listDocs().then(setDocs)
@@ -82,18 +79,6 @@ export function Atelier() {
       ) : (
         docs && <p className="atelier-empty">{t('docs.empty')}</p>
       )}
-      <h3 className="atelier-sub">{t('docs.templates')}</h3>
-      <ul className="atelier-templates">
-        {TEMPLATES.map((tpl, i) => (
-          <li key={tpl.id}>
-            <button type="button" className="tpl" onClick={() => openNew(tpl.make(lang))}>
-              <Thumb doc={previews[i]} />
-              <span className="tpl-name">{t(tpl.name)}</span>
-              <span className="tpl-desc">{t(tpl.desc)}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
     </section>
   )
 }

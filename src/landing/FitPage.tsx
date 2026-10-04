@@ -1,10 +1,10 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { Doc } from '../model/schema'
 import { MM, PAGE_MM, Page } from '../render/Page'
 import { loadThemeFonts } from '../render/fonts'
 
-export function Thumb({ doc }: { doc: Doc }) {
-  const ref = useRef<HTMLDivElement>(null)
+export function FitPage({ doc, className, children, pageRef }: { doc: Doc; className?: string; children?: ReactNode; pageRef?: (el: HTMLDivElement | null) => void }) {
+  const box = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(0.3)
   const [ready, setReady] = useState(false)
   const w = PAGE_MM[doc.page.format].w * MM
@@ -15,18 +15,19 @@ export function Thumb({ doc }: { doc: Doc }) {
     return () => {
       alive = false
     }
-  }, [doc])
+  }, [doc.theme])
   useLayoutEffect(() => {
-    const el = ref.current
+    const el = box.current
     if (!el) return
     const ro = new ResizeObserver(() => setScale(el.clientWidth / w))
     ro.observe(el)
     return () => ro.disconnect()
   }, [w])
   return (
-    <div ref={ref} className={`thumb${ready ? ' is-ready' : ''}`} style={{ height: h * scale }} aria-hidden="true">
-      <div className="thumb-scale" style={{ width: w, transform: `scale(${scale})` }}>
+    <div ref={box} className={`fit-page${ready ? ' is-ready' : ''} ${className ?? ''}`} style={{ height: h * scale }}>
+      <div className="fit-page-scale" ref={pageRef} style={{ width: w, height: h, transform: `scale(${scale})` }}>
         <Page doc={doc} />
+        {children}
       </div>
     </div>
   )

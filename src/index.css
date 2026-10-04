@@ -5,24 +5,25 @@
 html, body, #root { margin: 0; min-height: 100%; }
 
 body {
-  background: var(--stone);
+  background: var(--paper);
   color: var(--ink);
   font-family: var(--ui);
   font-size: 15px;
-  line-height: 1.45;
+  line-height: 1.5;
+  letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 button, input, select, textarea { font: inherit; color: inherit; }
 
-:focus-visible { outline: 1px solid var(--ink); outline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
 
-.wordmark { display: inline-flex; align-items: center; gap: 0.38em; font-weight: 900; line-height: 1; letter-spacing: -0.01em; }
-.wordmark-reg { flex: 0 0 auto; }
+.wordmark { display: inline-flex; align-items: center; gap: 0.42em; font-weight: 600; line-height: 1; letter-spacing: -0.02em; }
+.wordmark-mark { flex: 0 0 auto; }
 
 .ui-scrub-input, .gauge, .ol-num, .atelier-date, .var-count { font-variant-numeric: tabular-nums; }

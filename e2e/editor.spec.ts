@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 async function fromTemplate(page: Page) {
   await page.goto('/#/')
-  await page.locator('.tpl').first().click()
+  await page.locator('.rail-card').first().click()
   await expect(page.locator('.mb-page.is-editing')).toBeVisible()
 }
 

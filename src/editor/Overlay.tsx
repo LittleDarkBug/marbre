@@ -7,21 +7,10 @@ import { Thread, useBlockOrder } from './Thread'
 import { useAts } from '../ats/store'
 import { useEditorUi } from './uiState'
 
-const L = 9
-const G = 3
+const G = 4
 
 function Crop({ r, strong }: { r: Rect; strong?: boolean }) {
-  const x0 = r.x - G
-  const y0 = r.y - G
-  const x1 = r.x + r.w + G
-  const y1 = r.y + r.h + G
-  const d = [
-    `M${x0 - L} ${y0}H${x0 - 2}M${x0} ${y0 - L}V${y0 - 2}`,
-    `M${x1 + 2} ${y0}H${x1 + L}M${x1} ${y0 - L}V${y0 - 2}`,
-    `M${x0 - L} ${y1}H${x0 - 2}M${x0} ${y1 + 2}V${y1 + L}`,
-    `M${x1 + 2} ${y1}H${x1 + L}M${x1} ${y1 + 2}V${y1 + L}`,
-  ].join('')
-  return <path d={d} className={strong ? 'ov-crop' : 'ov-crop ov-crop-soft'} />
+  return <rect x={r.x - G} y={r.y - G} width={r.w + G * 2} height={r.h + G * 2} rx={6} className={strong ? 'ov-crop' : 'ov-crop ov-crop-soft'} />
 }
 
 export function useSelectionRects(doc: Doc) {
