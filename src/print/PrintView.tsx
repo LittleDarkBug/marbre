@@ -9,7 +9,7 @@ import './print.css'
 
 type Injected = { __MARBRE_DOC__?: unknown; __MARBRE_READY__?: boolean; __MARBRE_FIT__?: Fit }
 
-export function PrintView({ id, variant }: { id: string; variant: string | null }) {
+export function PrintView({ id, variant, auto }: { id: string; variant: string | null; auto?: boolean }) {
   const [doc, setDoc] = useState<Doc | null>(null)
   const [ready, setReady] = useState(false)
   const w = window as unknown as Injected
@@ -42,7 +42,10 @@ export function PrintView({ id, variant }: { id: string; variant: string | null 
         doc={doc}
         onFit={(fit) => {
           w.__MARBRE_FIT__ = fit
-          if (ready) w.__MARBRE_READY__ = true
+          if (ready && !w.__MARBRE_READY__) {
+            w.__MARBRE_READY__ = true
+            if (auto) setTimeout(() => window.print(), 300)
+          }
         }}
       />
     </div>
