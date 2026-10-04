@@ -19,6 +19,7 @@ Tout fonctionne dans le navigateur. Pas de compte, pas de serveur : vos CV reste
 - **Variantes.** Une variante adapte le CV de base à une offre ou à une langue, et ne garde que ce qui change. La relecture vérifie les mots-clés de chaque offre.
 - **Relecture.** Mots à éviter, emojis, espaces insécables françaises, doubles espaces, parenthèses.
 - **Gabarits.** Sept gabarits, chacun exporté et vérifié par la suite de tests : Signal, Une colonne, Grille suisse, Éditorial, Technique, Portrait, Affiche.
+- **Importer n’importe quel CV.** Déposez un PDF (les PDF scannés passent par une reconnaissance de texte), un fichier Word, OpenDocument, RTF, HTML, Markdown, texte ou une image, quel que soit l’outil qui l’a produit. Marbre reconstruit l’identité, les coordonnées, les sections, les entrées, les dates, les puces, les compétences et les langues, indique la part des mots du document conservés et range ce qu’il n’a pas su classer dans un bloc « À trier » : rien n’est perdu. Tout se fait dans le navigateur. L’analyse est vérifiée sur environ quatre-vingts CV réels et d’exemple (Canva, Word, LaTeX, Europass, exports web).
 - **Formats ouverts.** Fichiers `.marbre.json`, import et export JSON Resume.
 
 ## Pourquoi faire confiance à la lentille

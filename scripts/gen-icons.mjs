@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 
-const dir = 'node_modules/@phosphor-icons/core/assets/fill'
+const weight = process.argv[2] ?? 'regular'
+const dir = `node_modules/@phosphor-icons/core/assets/${weight}`
 const out = {}
 for (const file of readdirSync(dir)) {
   const svg = readFileSync(`${dir}/${file}`, 'utf8')
@@ -9,5 +10,5 @@ for (const file of readdirSync(dir)) {
   if (!paths.length || body.replace(/<path d="[^"]+"\s*\/>/g, '').trim()) continue
   out[file.replace(/-fill\.svg$/, '')] = paths.join(' ')
 }
-writeFileSync('src/render/iconLibrary.json', JSON.stringify(out))
+writeFileSync(`src/render/icons-${weight}.json`, JSON.stringify(out))
 console.log(Object.keys(out).length, 'icons')

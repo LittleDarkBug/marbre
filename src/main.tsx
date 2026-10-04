@@ -10,7 +10,7 @@ import App from './App.tsx'
 import { useAts } from './ats/store'
 import { useDoc } from './store/doc'
 
-Object.assign(window, { marbre: { store: useDoc, ats: useAts } })
+Object.assign(window, { marbre: { store: useDoc, ats: useAts, importFile: (file: File) => import('./importer').then((m) => m.importFile(file, { lang: 'fr' })) } })
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

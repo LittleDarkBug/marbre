@@ -5,6 +5,10 @@ import { extname, join, normalize } from 'node:path'
 const TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript',
+  '.mjs': 'text/javascript',
+  '.webmanifest': 'application/manifest+json',
+  '.ico': 'image/x-icon',
+  '.wasm': 'application/wasm',
   '.css': 'text/css',
   '.woff2': 'font/woff2',
   '.woff': 'font/woff',

@@ -19,6 +19,7 @@ Everything runs in the browser. There is no account and no server: your CVs stay
 - **Variants.** A variant adapts the base CV to a job offer or a language and stores only what changes. Proofing checks the keywords of each offer.
 - **Proofing.** Words to avoid, emoji, French non-breaking spaces, double spaces, brackets.
 - **Templates.** Seven templates, each one exported and checked by the test suite: Signal, One column, Swiss grid, Editorial, Technical, Portrait, Poster.
+- **Import any CV.** Drop a PDF (scanned ones go through text recognition), Word, OpenDocument, RTF, HTML, Markdown, plain text or an image, whatever tool produced it. Marbre rebuilds the identity, contacts, sections, entries, dates, bullets, skills and languages, shows how many of the source words it kept, and puts anything it could not classify in a "To sort" block so nothing is lost. Everything runs in the browser. The parser is checked against about eighty real and sample CVs (Canva, Word, LaTeX, Europass, web exports).
 - **Open formats.** Native `.marbre.json` files, plus JSON Resume import and export.
 
 ## Why the ATS lens can be trusted

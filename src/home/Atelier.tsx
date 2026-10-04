@@ -6,6 +6,7 @@ import type { Doc } from '../model/schema'
 import { useDoc } from '../store/doc'
 import { canOpenFolder, listDocs, openFolder, parseFile, removeDoc, saveDoc, type DocMeta } from '../store/persist'
 import { Btn } from '../ui/kit'
+import { ImportDialog } from '../importer/ImportDialog'
 
 export async function openNew(doc: Doc) {
   await saveDoc(doc)
@@ -19,6 +20,7 @@ export function Atelier() {
   const [docs, setDocs] = useState<DocMeta[] | null>(null)
   const [error, setError] = useState('')
   const input = useRef<HTMLInputElement>(null)
+  const [importing, setImporting] = useState(false)
 
   useEffect(() => {
     listDocs().then(setDocs)
@@ -38,7 +40,8 @@ export function Atelier() {
         <h2 id="atelier-title">{t('docs.title')}</h2>
         <div className="atelier-actions">
           <Btn icon="file-plus" showLabel tone="solid" label={t('docs.blank')} onClick={() => openNew(blankDoc(t('docs.untitled'), lang))} />
-          <Btn icon="upload-simple" showLabel label={t('nav.import')} onClick={() => input.current?.click()} />
+          <Btn icon="upload-simple" showLabel tone="solid" label={t('imp.open')} onClick={() => setImporting(true)} />
+          <Btn icon="file-plus" showLabel label={t('nav.import')} onClick={() => input.current?.click()} />
           {canOpenFolder() && (
             <Btn
               icon="folder-open"
@@ -55,6 +58,7 @@ export function Atelier() {
         </div>
       </header>
       {error && <p className="atelier-error" role="alert">{error}</p>}
+      <ImportDialog open={importing} onClose={() => setImporting(false)} onDone={(r) => { setImporting(false); openNew(r.doc) }} />
       {docs && docs.length > 0 ? (
         <ol className="atelier-list">
           {docs.map((d) => (

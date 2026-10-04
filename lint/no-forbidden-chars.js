@@ -11,8 +11,8 @@ export default {
       if (typeof value === 'string' && FORBIDDEN.test(value)) context.report({ node, messageId: 'char' })
     }
     return {
-      Literal: (node) => check(node, node.value),
-      TemplateElement: (node) => check(node, node.value.cooked),
+      Literal: (node) => check(node, typeof node.value === 'string' ? node.raw : null),
+      TemplateElement: (node) => check(node, node.value.raw),
       JSXText: (node) => check(node, node.value),
     }
   },

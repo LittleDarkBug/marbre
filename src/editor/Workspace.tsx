@@ -96,7 +96,7 @@ export function Workspace({ doc, onFit }: { doc: Doc; onFit: (f: Fit) => void })
         scroller.current = el
         setHost(el)
       }}
-      className="ws"
+      className={`ws${fitZoom ? ' is-fit' : ''}`}
       onPointerDown={(e) => {
         const target = e.target as HTMLElement
         const decor = target.closest<HTMLElement>('[data-decor]')

@@ -1,4 +1,4 @@
-export type Char = { text: string; x0: number; y0: number; x1: number; y1: number; block?: string }
+export type Char = { text: string; x0: number; y0: number; x1: number; y1: number; block?: string; ref?: number }
 
 type Box = { x0: number; y0: number; x1: number; y1: number }
 type Line = Box & { chars: Char[] }
@@ -184,4 +184,16 @@ export function readPdfminer(chars: Char[], p = LAPARAMS): ReadBox[] {
       blocks: [...new Set(b.lines.flatMap((l) => l.chars.map((c) => c.block).filter((x): x is string => Boolean(x))))],
       box: { x0: b.x0, y0: b.y0, x1: b.x1, y1: b.y1 },
     }))
+}
+
+export type LayoutLine = { text: string; chars: Char[]; x0: number; y0: number; x1: number; y1: number }
+export type LayoutBox = { lines: LayoutLine[]; x0: number; y0: number; x1: number; y1: number }
+
+export function pdfminerLayout(chars: Char[], p = LAPARAMS): LayoutBox[] {
+  const boxes = groupBoxes(groupLines(chars, p), p)
+  const tree = groupTree(boxes)
+  if (tree) assign(tree, p.boxesFlow, { n: 0 })
+  return boxes
+    .sort((a, b) => a.index - b.index)
+    .map((b) => ({ x0: b.x0, y0: b.y0, x1: b.x1, y1: b.y1, lines: b.lines.map((l) => ({ text: lineText(l, p), chars: l.chars, x0: l.x0, y0: l.y0, x1: l.x1, y1: l.y1 })) }))
 }
