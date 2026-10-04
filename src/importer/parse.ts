@@ -20,7 +20,7 @@ type Row = Line & { full: string }
 function normalize(lines: Line[]): Row[] {
   return lines
     .map((l) => {
-      let text = fixAccents(l.text).replace(/^(?:INFORMATIONS\s+)?PERSONNELLES\s+(?=\p{Lu})/u, '').replace(/\s+/g, ' ').trim()
+      let text = fixAccents(l.text).replace(/[\uE000-\uF8FF\uFFFD\u25A1]/g, ' ').replace(/^(?:INFORMATIONS\s+)?PERSONNELLES\s+(?=\p{Lu})/u, '').replace(/\s+/g, ' ').trim()
       let bullet = l.bullet ?? false
       const m = BULLET.exec(text)
       if (m && text.length > m[0].length + 1 && !/^\d{4}/.test(text) && !/^-\s*\d/.test(text)) {

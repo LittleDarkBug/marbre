@@ -14,6 +14,7 @@
   font-synthesis: none;
   text-rendering: geometricPrecision;
   text-align: left;
+  overflow-wrap: break-word;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
@@ -163,7 +164,7 @@
 
 .mb-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .mb-row > :last-child:not(:first-child) { text-align: right; flex: 0 0 auto; }
-.mb-place, .mb-link { white-space: nowrap; }
+.mb-place, .mb-link { display: inline-block; max-width: 100%; min-width: 0; vertical-align: top; overflow-wrap: anywhere; }
 .mb-link { font-size: var(--mb-s-small); }
 .mb-page[data-entry='split'] .mb-org { margin: 0; line-height: 1.25; }
 .mb-page[data-entry='split'] .mb-h3 { line-height: 1.2; }
@@ -196,6 +197,11 @@
 @media print {
   @page { margin: 0; }
   .mb-page { overflow: hidden; }
+  .mb-page[data-fit='flow'] .mb-col { -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+  .mb-page[data-fit='flow'] .mb-row, .mb-page[data-fit='flow'] .mb-pair, .mb-page[data-fit='flow'] .mb-skill, .mb-page[data-fit='flow'] .mb-pts > li, .mb-page[data-fit='flow'] .mb-head { break-inside: avoid; }
+  .mb-page[data-fit='flow'] .mb-h2, .mb-page[data-fit='flow'] .mb-head { break-after: avoid; }
+  .mb-page[data-fit='flow'] p, .mb-page[data-fit='flow'] .mb-text { orphans: 3; widows: 3; }
+  .mb-break { display: none; }
 }
 
 .mb-break { position: absolute; left: 0; right: 0; height: 0; border-top: 1px dashed rgba(0, 0, 0, 0.35); z-index: 60; pointer-events: none; }

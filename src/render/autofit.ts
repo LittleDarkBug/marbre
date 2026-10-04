@@ -58,12 +58,43 @@ async function measurer() {
   return { measure, dispose }
 }
 
+async function balance(doc: Doc, measure: (d: Doc) => Promise<Fit>): Promise<Doc> {
+  if (doc.layout.columns.length < 2) return doc
+  let current = doc
+  let fit = await measure(scaleDoc(current, 1, 1))
+  const worst = (f: Fit) => Math.min(...f.columns.map((c) => c.slack))
+  for (let i = 0; i < 8; i++) {
+    const over = [...fit.columns].sort((a, b) => a.slack - b.slack)[0]
+    const room = [...fit.columns].sort((a, b) => b.slack - a.slack)[0]
+    if (!over || !room || over.id === room.id || over.slack >= 0 || room.slack < 80) break
+    const next = structuredClone(current)
+    const from = next.layout.columns.find((c) => c.id === over.id)
+    const to = next.layout.columns.find((c) => c.id === room.id)
+    const movable = from?.blocks.filter((id) => !['identity', 'photo'].includes(next.blocks.find((b) => b.id === id)?.type ?? ''))
+    const id = movable?.[movable.length - 1]
+    if (!from || !to || !id) break
+    from.blocks = from.blocks.filter((x) => x !== id)
+    to.blocks.push(id)
+    const after = await measure(scaleDoc(next, 1, 1))
+    if (worst(after) <= worst(fit)) break
+    current = next
+    fit = after
+  }
+  return current
+}
+
 export async function autoFit(doc: Doc, maxPages = 3): Promise<FitResult> {
   if (doc.layout.mode !== 'flow') return { doc, scale: 1, pages: doc.page.count ?? 1, fitted: true }
   await loadDocFonts(doc)
   const { measure, dispose } = await measurer()
-  const fits = async (d: Doc) => !(await measure(d)).overflow
+  const fits = async (d: Doc) => {
+    const fit = await measure(d)
+    const pages = d.page.count ?? 1
+    const reserve = pages > 1 ? (pages - 1) * (d.page.margin.top + d.page.margin.bottom + 14) * MM : 0
+    return !fit.overflow && fit.columns.every((c) => c.slack >= reserve)
+  }
   const floor = 0.66
+  doc = await balance(doc, measure)
   try {
     for (let pages = 1; pages <= maxPages; pages++) {
       const full = scaleDoc(doc, 1, pages)
