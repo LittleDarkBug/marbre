@@ -25,7 +25,7 @@ export function expectations(doc: Doc): Expectation[] {
         out.push({ start: title, end: sameLine && (doc.theme.entry === 'split' || doc.layout.columns.length === 1) ? clean(e.dates) : undefined })
         for (const bullet of e.bullets) {
           const text = clean(bullet.text)
-          if (text) out.push({ start: `– ${text.slice(0, 24)}` })
+          if (text) out.push({ start: doc.theme.bullets === 'text' ? `– ${text.slice(0, 24)}` : text.slice(0, 24) })
         }
       }
     }

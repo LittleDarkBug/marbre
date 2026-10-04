@@ -186,8 +186,6 @@ export const fr = {
   'exp.resume': 'JSON Resume',
   'exp.cli': 'Pour produire tous les PDF d’un coup, ou depuis un script :',
   'ats.lens': 'Lentille ATS',
-  'tpl.signal': 'Signal',
-  'tpl.signal.desc': 'Deux colonnes, colonne teintée à droite, accent vermillon.',
   'sel.forward': 'Avancer',
   'sel.backward': 'Reculer',
   'ol.decor': 'Ornements',
@@ -250,6 +248,19 @@ export const fr = {
   'style.block': 'En bloc',
   'style.lines': 'Une par ligne',
   'insp.nameCase': 'Nom',
+  'insp.headings': 'Titres de section',
+  'style.stack': 'Au-dessus',
+  'style.rail': 'En marge',
+  'tpl.signal': 'Signal',
+  'tpl.signal.desc': 'Deux colonnes, colonne teintée à droite, accent vermillon.',
+  'tpl.colonne': 'Une colonne',
+  'tpl.colonne.desc': 'Dense et linéaire, en-tête sur une ligne, lu sans risque par tous les logiciels.',
+  'tpl.suisse': 'Grille suisse',
+  'tpl.suisse.desc': 'Titres de section en marge, grotesque sobre, filets fins.',
+  'tpl.editorial': 'Éditorial',
+  'tpl.editorial.desc': 'Romain de lecture, mesure confortable, ton de revue.',
+  'tpl.technique': 'Technique',
+  'tpl.technique.desc': 'Chasse fixe pour les repères, deux colonnes sans fond, vert profond.',
 } as const
 
 export type Key = keyof typeof fr

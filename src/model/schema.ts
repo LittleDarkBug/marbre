@@ -87,6 +87,8 @@ export const Theme = z.object({
   entry: z.enum(['stacked', 'split']).default('stacked'),
   skills: z.enum(['block', 'inline']).default('block'),
   pairs: z.enum(['lines', 'inline']).default('lines'),
+  headings: z.enum(['stack', 'rail']).default('stack'),
+  bullets: z.enum(['drawn', 'text']).default('drawn'),
 })
 
 export const Column = z.object({

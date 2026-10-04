@@ -7,7 +7,7 @@ export const defaultTheme = (): Theme => ({
   size: { name: 36, title: 16, heading: 16, body: 13, small: 12 },
   weight: { body: 400, strong: 700 },
   leading: 1.4,
-  spacing: { section: 12, item: 6, line: 3 },
+  spacing: { section: 12, item: 6, line: 1 },
   headingCase: 'upper',
   nameCase: 'upper',
   datePlacement: 'inline',
@@ -16,6 +16,8 @@ export const defaultTheme = (): Theme => ({
   entry: 'stacked',
   skills: 'block',
   pairs: 'lines',
+  headings: 'stack',
+  bullets: 'drawn',
 })
 
 export const newEntry = (title = ''): Entry => ({

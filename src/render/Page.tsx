@@ -117,6 +117,8 @@ export function Page({ doc, onFit, className }: { doc: Doc; onFit?: (fit: Fit) =
       data-entry={doc.theme.entry}
       data-skills={doc.theme.skills}
       data-pairs={doc.theme.pairs}
+      data-headings={doc.theme.headings}
+      data-bullets={doc.theme.bullets}
     >
       {doc.layout.decor.map((d) => (
         <div

@@ -139,6 +139,9 @@ function DocumentPanel({ doc }: { doc: Doc }) {
         <Field label={t('insp.pairs')}>
           <Segmented label={t('insp.pairs')} value={th.pairs} options={[{ value: 'lines', label: t('style.lines') }, { value: 'inline', label: t('style.inline') }]} onChange={(v) => edit((d) => { d.theme.pairs = v })} />
         </Field>
+        <Field label={t('insp.headings')}>
+          <Segmented label={t('insp.headings')} value={th.headings} options={[{ value: 'stack', label: t('style.stack') }, { value: 'rail', label: t('style.rail') }]} onChange={(v) => edit((d) => { d.theme.headings = v })} />
+        </Field>
         <Field label={t('insp.rule')}>
           <select value={th.rule} onChange={(e) => edit((d) => { d.theme.rule = e.target.value as Doc['theme']['rule'] })}>
             <option value="none">{t('rule.none')}</option>

@@ -34,7 +34,7 @@ export function samplePage(page: HTMLElement): Sample {
       if (el.tagName === 'LI' && el.parentElement?.classList.contains('mb-pts') && !SKIP(el)) {
         const content = getComputedStyle(el, '::before').content
         const first = el.firstChild
-        if (content && content !== 'none' && first) {
+        if (content && content !== 'none' && content !== '""' && content !== "''" && first) {
           range.selectNodeContents(el)
           const rects = range.getClientRects()
           if (rects.length) {
