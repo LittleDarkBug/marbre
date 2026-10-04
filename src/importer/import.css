@@ -1,4 +1,4 @@
-.imp { width: min(640px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); padding: 0; border: 0; border-radius: 20px; background: var(--paper); color: var(--ink); box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.35); overflow: auto; }
+.imp { width: min(640px, calc(100vw - 24px)); transition: width 240ms var(--ease); max-height: calc(100dvh - 24px); padding: 0; border: 0; border-radius: 20px; background: var(--paper); color: var(--ink); box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.35); overflow: auto; }
 .imp::backdrop { background: rgba(0, 0, 0, 0.35); }
 .imp-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 14px 10px 22px; border-bottom: 1px solid var(--line); }
 .imp-head h2 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
@@ -33,3 +33,4 @@
   .imp-facts div, .imp-sections li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
   .imp-actions .lp-cta { width: 100%; }
 }
+.imp.is-wide { width: min(1040px, calc(100vw - 24px)); }

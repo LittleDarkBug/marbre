@@ -6,6 +6,8 @@ import { loadFamily } from '../render/fonts'
 import { ICONS } from '../render/icons'
 import { useDoc } from '../store/doc'
 import { Btn, ColorField, Field, Scrub, Section, Segmented } from '../ui/kit'
+import { Select } from '../ui/Select'
+import { LayoutTools } from './LayoutTools'
 import { addColumn, removeColumn, setMode } from './actions'
 import { currentScale, pageEl, pageRect } from './geometry'
 import { BlockStylePanel, FreePanel, NotePanel, PagePanel, PhotoPanel, RatingPanel } from './InspectorExtras'
@@ -17,22 +19,16 @@ function FontSelect({ role, value }: { role: FontRole; value: string }) {
   const edit = useDoc((s) => s.edit)
   return (
     <Field label={t(`font.${role}`)}>
-      <select
+      <Select
+        label={t(`font.${role}`)}
         value={value}
-        style={{ fontFamily: `'${value}'` }}
-        onChange={(e) => {
-          const family = e.target.value
+        searchable
+        searchPlaceholder={t('ui.searchFont')}
+        options={CATEGORY_ORDER.flatMap((cat) => FONTS.filter((f) => f.category === cat).map((f) => ({ value: f.family, label: f.family, group: t(`font.cat.${cat}`), style: { fontFamily: `'${f.family}'` } })))}
+        onChange={(family) => {
           loadFamily(family).then(() => edit((d) => { d.theme.fonts[role] = family }))
         }}
-      >
-        {CATEGORY_ORDER.map((cat) => (
-          <optgroup key={cat} label={t(`font.cat.${cat}`)}>
-            {FONTS.filter((f) => f.category === cat).map((f) => (
-              <option key={f.family} value={f.family}>{f.family}</option>
-            ))}
-          </optgroup>
-        ))}
-      </select>
+      />
     </Field>
   )
 }
@@ -51,6 +47,7 @@ function DocumentPanel({ doc }: { doc: Doc }) {
         <Field label={t('insp.length')}>
           <Segmented label={t('insp.length')} value={doc.page.fit} options={[{ value: 'one', label: t('insp.onePage') }, { value: 'flow', label: t('insp.severalPages') }]} onChange={(v) => edit((d) => { d.page.fit = v })} />
         </Field>
+        <LayoutTools doc={doc} />
         {(['top', 'right', 'bottom', 'left'] as const).map((side) => (
           <Scrub key={side} label={t(`insp.margin.${side}`)} unit="mm" value={doc.page.margin[side]} min={0} max={40} onChange={(v) => edit((d) => { d.page.margin[side] = v }, { merge: `m-${side}` })} />
         ))}
@@ -100,14 +97,10 @@ function DocumentPanel({ doc }: { doc: Doc }) {
           <FontSelect key={r} role={r} value={th.fonts[r]} />
         ))}
         <Field label={t('insp.weightBody')}>
-          <select value={th.weight.body} onChange={(e) => edit((d) => { d.theme.weight.body = Number(e.target.value) })}>
-            {bodyWeights.map((w) => <option key={w} value={w}>{w}</option>)}
-          </select>
+          <Select label={t('insp.weightBody')} value={String(th.weight.body)} options={bodyWeights.map((w) => ({ value: String(w), label: String(w), style: { fontWeight: w } }))} onChange={(v) => edit((d) => { d.theme.weight.body = Number(v) })} />
         </Field>
         <Field label={t('insp.weightStrong')}>
-          <select value={th.weight.strong} onChange={(e) => edit((d) => { d.theme.weight.strong = Number(e.target.value) })}>
-            {bodyWeights.map((w) => <option key={w} value={w}>{w}</option>)}
-          </select>
+          <Select label={t('insp.weightStrong')} value={String(th.weight.strong)} options={bodyWeights.map((w) => ({ value: String(w), label: String(w), style: { fontWeight: w } }))} onChange={(v) => edit((d) => { d.theme.weight.strong = Number(v) })} />
         </Field>
         {(['name', 'title', 'heading', 'body', 'small'] as const).map((k) => (
           <Scrub key={k} label={t(`size.${k}`)} unit="px" step={0.1} min={7} max={k === 'name' ? 96 : 40} value={th.size[k]} onChange={(v) => edit((d) => { d.theme.size[k] = v }, { merge: `s-${k}` })} />
@@ -144,11 +137,12 @@ function DocumentPanel({ doc }: { doc: Doc }) {
           <Segmented label={t('insp.headings')} value={th.headings} options={[{ value: 'stack', label: t('style.stack') }, { value: 'rail', label: t('style.rail') }]} onChange={(v) => edit((d) => { d.theme.headings = v })} />
         </Field>
         <Field label={t('insp.rule')}>
-          <select value={th.rule} onChange={(e) => edit((d) => { d.theme.rule = e.target.value as Doc['theme']['rule'] })}>
-            <option value="none">{t('rule.none')}</option>
-            <option value="under-identity">{t('rule.identity')}</option>
-            <option value="under-headings">{t('rule.headings')}</option>
-          </select>
+          <Select<Doc['theme']['rule']>
+            label={t('insp.rule')}
+            value={th.rule}
+            options={[{ value: 'none', label: t('rule.none') }, { value: 'under-identity', label: t('rule.identity') }, { value: 'under-headings', label: t('rule.headings') }]}
+            onChange={(v) => edit((d) => { d.theme.rule = v })}
+          />
         </Field>
       </Section>
       <Section title={t('insp.colors')}>
@@ -171,10 +165,14 @@ function IdentityPanel({ block }: { block: IdentityBlock }) {
       <Section title={t('insp.highlights')} aside={<Btn icon="plus" label={t('insp.addHighlight')} onClick={() => edit((d) => { at(d).highlights.push({ id: uid('h'), icon: 'star', text: '' }) })} />}>
         {block.highlights.map((h, i) => (
           <div key={h.id} className="insp-row insp-line">
-            <select aria-label={t('insp.icon')} value={h.icon ?? ''} onChange={(e) => edit((d) => { at(d).highlights[i].icon = e.target.value || undefined })}>
-              <option value="">{t('insp.noIcon')}</option>
-              {Object.keys(ICONS).map((n) => <option key={n} value={n}>{n}</option>)}
-            </select>
+            <Select
+              className="insp-icon-select"
+              label={t('insp.icon')}
+              value={h.icon ?? ''}
+              width={220}
+              options={[{ value: '', label: t('insp.noIcon') }, ...Object.keys(ICONS).map((n) => ({ value: n, label: n.replace(/-/g, ' '), preview: <span className="ui-svg" dangerouslySetInnerHTML={{ __html: ICONS[n] }} /> }))]}
+              onChange={(v) => edit((d) => { at(d).highlights[i].icon = v || undefined })}
+            />
             <input className="ui-input" aria-label={t('insp.text')} value={h.text} onChange={(e) => edit((d) => { at(d).highlights[i].text = e.target.value }, { merge: h.id })} />
             <Btn icon="trash" tone="proof" label={t('sel.deleteItem')} onClick={() => edit((d) => { at(d).highlights.splice(i, 1) })} />
           </div>
@@ -184,9 +182,7 @@ function IdentityPanel({ block }: { block: IdentityBlock }) {
         {block.contacts.map((c, i) => (
           <div key={c.id} className="insp-contact">
             <div className="insp-row insp-line">
-              <select aria-label={t('insp.kind')} value={c.kind} onChange={(e) => edit((d) => { at(d).contacts[i].kind = e.target.value as Contact['kind'] })}>
-                {CONTACT_KINDS.map((k) => <option key={k} value={k}>{t(`contact.${k}`)}</option>)}
-              </select>
+              <Select<Contact['kind']> className="insp-kind-select" label={t('insp.kind')} value={c.kind} width={170} options={CONTACT_KINDS.map((k) => ({ value: k, label: t(`contact.${k}`) }))} onChange={(v) => edit((d) => { at(d).contacts[i].kind = v })} />
               <input className="ui-input" aria-label={t('insp.text')} value={c.text} onChange={(e) => edit((d) => { at(d).contacts[i].text = e.target.value }, { merge: c.id })} />
               <Btn icon="trash" tone="proof" label={t('sel.deleteItem')} onClick={() => edit((d) => { at(d).contacts.splice(i, 1) })} />
             </div>
@@ -213,9 +209,7 @@ function BlockPanel({ block }: { block: Block }) {
         )}
         {block.type === 'entries' && (
           <Field label={t('insp.entryKind')}>
-            <select value={block.kind} onChange={(e) => edit((d) => { const b = at(d); if (b.type === 'entries') b.kind = e.target.value as typeof b.kind })}>
-              {(['experience', 'education', 'project', 'other'] as const).map((k) => <option key={k} value={k}>{t(`kind.${k}`)}</option>)}
-            </select>
+            <Select label={t('insp.entryKind')} value={block.kind} options={(['experience', 'education', 'project', 'other'] as const).map((k) => ({ value: k, label: t(`kind.${k}`) }))} onChange={(v) => edit((d) => { const b = at(d); if (b.type === 'entries') b.kind = v })} />
           </Field>
         )}
         <Btn label={t(block.hidden ? 'insp.show' : 'insp.hide')} icon={block.hidden ? 'eye' : 'eye-slash'} showLabel onClick={() => edit((d) => { at(d).hidden = !block.hidden })} />
@@ -236,12 +230,17 @@ function DecorPanel({ doc, id }: { doc: Doc; id: string }) {
   return (
     <Section title={t(`decor.${decor.kind}`)} aside={<Btn label={t('insp.document')} showLabel onClick={() => select(null)} />}>
       <Field label={t('decor.color')}>
-        <select value={named.includes(decor.color) ? decor.color : 'custom'} onChange={(e) => edit((d) => { at(d).color = e.target.value === 'custom' ? '#15120e' : e.target.value })}>
-          <option value="accent">{t('color.accent')}</option>
-          <option value="ink">{t('color.ink')}</option>
-          <option value="panel">{t('color.panel')}</option>
-          <option value="custom">{t('decor.custom')}</option>
-        </select>
+        <Select
+          label={t('decor.color')}
+          value={named.includes(decor.color) ? decor.color : 'custom'}
+          options={[
+            { value: 'accent', label: t('color.accent'), preview: <i className="ui-swatch" style={{ background: doc.theme.colors.accent }} /> },
+            { value: 'ink', label: t('color.ink'), preview: <i className="ui-swatch" style={{ background: doc.theme.colors.ink }} /> },
+            { value: 'panel', label: t('color.panel'), preview: <i className="ui-swatch" style={{ background: doc.theme.colors.panel }} /> },
+            { value: 'custom', label: t('decor.custom') },
+          ]}
+          onChange={(v) => edit((d) => { at(d).color = v === 'custom' ? '#15120e' : v })}
+        />
       </Field>
       {!named.includes(decor.color) && <ColorField label={t('decor.custom')} value={decor.color} onChange={(v) => edit((d) => { at(d).color = v }, { merge: `${id}c` })} />}
       {(decor.kind === 'rect' || decor.kind === 'ellipse') && (
@@ -250,11 +249,14 @@ function DecorPanel({ doc, id }: { doc: Doc; id: string }) {
           <Scrub label={t('decor.stroke')} unit="mm" step={0.1} min={0} max={5} value={decor.stroke} onChange={(v) => edit((d) => { at(d).stroke = v }, { merge: `${id}s` })} />
         </>
       )}
-      {decor.kind === 'icon' && (
+      {decor.kind === 'icon' && !decor.src && (
         <Field label={t('insp.icon')}>
-          <select value={decor.icon} onChange={(e) => edit((d) => { at(d).icon = e.target.value })}>
-            {Object.keys(ICONS).map((n) => <option key={n} value={n}>{n}</option>)}
-          </select>
+          <Select
+            label={t('insp.icon')}
+            value={decor.icon ?? ''}
+            options={Object.keys(ICONS).map((n) => ({ value: n, label: n.replace(/-/g, ' '), preview: <span className="ui-svg" dangerouslySetInnerHTML={{ __html: ICONS[n] }} /> }))}
+            onChange={(v) => edit((d) => { at(d).icon = v })}
+          />
         </Field>
       )}
       {(decor.kind === 'rect' || decor.kind === 'image') && <Scrub label={t('style.radius')} unit="mm" step={0.5} min={0} max={60} value={decor.radius} onChange={(v) => edit((d) => { at(d).radius = v }, { merge: `${id}r` })} />}

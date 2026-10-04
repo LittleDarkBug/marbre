@@ -2,13 +2,12 @@ import { blankDoc } from '../model/factories'
 import { uid } from '../model/ids'
 import { escape } from '../model/rich'
 import type { Block, Doc, EntriesBlock } from '../model/schema'
-import { TEMPLATES } from '../templates'
+import { applyTemplate } from '../templates/apply'
 import type { ParsedCv, ParsedSection } from './types'
 
 const html = (s: string) => escape(s).replace(/\n/g, '<br>')
 
 const ENTRY_KIND: Record<string, EntriesBlock['kind']> = { experience: 'experience', education: 'education', projects: 'project', volunteering: 'other' }
-const SIDE = new Set(['skills', 'languages', 'certifications', 'awards', 'interests', 'references'])
 
 function sectionBlock(s: ParsedSection, lang: 'fr' | 'en'): Block | null {
   const base = { id: uid('b'), heading: s.heading, hidden: false, style: {} }
@@ -36,12 +35,12 @@ function sectionBlock(s: ParsedSection, lang: 'fr' | 'en'): Block | null {
   return null
 }
 
-export function buildDoc(cv: ParsedCv, opts: { columns: number; name: string }): Doc {
+export const suggestTemplate = (columns: number) => (columns > 1 ? 'signal' : 'colonne')
+
+export function buildDoc(cv: ParsedCv, opts: { columns: number; name: string; template?: string }): Doc {
   const lang = cv.lang
-  const template = TEMPLATES.find((t) => t.id === (opts.columns > 1 ? 'signal' : 'colonne'))!.make(lang)
   const doc = blankDoc(opts.name || cv.name || 'CV', lang)
-  doc.theme = template.theme
-  doc.page = { ...template.page, fit: 'flow' }
+  doc.page = { ...doc.page, fit: 'one', count: 1 }
   const identity: Block = {
     id: uid('b'),
     type: 'identity',
@@ -53,38 +52,16 @@ export function buildDoc(cv: ParsedCv, opts: { columns: number; name: string }):
     highlights: (cv.highlights ?? []).map((text) => ({ id: uid('h'), text })),
     contacts: cv.contacts.map((c) => ({ id: uid('k'), kind: c.kind, text: c.text, href: c.href })),
   }
-  const main: string[] = [identity.id]
-  const side: string[] = []
   const blocks: Block[] = [identity]
-  if (cv.photo) {
-    const photo: Block = { id: uid('b'), type: 'photo', heading: '', hidden: false, style: {}, src: cv.photo.src, alt: cv.name, shape: 'circle', focusX: 50, focusY: 40, zoom: 1, grayscale: false, ratio: 1 }
-    blocks.push(photo)
-    if (opts.columns > 1) side.push(photo.id)
-    else {
-      doc.layout.frames[photo.id] = { x: 168, y: 10, w: 30, h: 30, rotate: 0, z: 2, locked: false }
-      doc.layout.order.push(photo.id)
-    }
-  }
+  if (cv.photo) blocks.push({ id: uid('b'), type: 'photo', heading: '', hidden: false, style: {}, src: cv.photo.src, alt: cv.name, shape: 'circle', focusX: 50, focusY: 40, zoom: 1, grayscale: false, ratio: 1 })
   for (const s of cv.sections) {
     const b = sectionBlock(s, lang)
-    if (!b) continue
-    blocks.push(b)
-    if (opts.columns > 1 && SIDE.has(s.kind)) side.push(b.id)
-    else main.push(b.id)
+    if (b) blocks.push(b)
   }
   if (cv.leftovers.length) {
-    const rest: Block = { id: uid('b'), type: 'text', heading: lang === 'fr' ? 'À trier' : 'To sort', hidden: false, style: { background: '#fff4d6', padding: 3, radius: 2 }, body: html(cv.leftovers.join('\n')) }
-    blocks.push(rest)
-    main.push(rest.id)
+    blocks.push({ id: uid('b'), type: 'text', heading: lang === 'fr' ? 'À trier' : 'To sort', hidden: false, style: { background: '#fff4d6', padding: 3, radius: 2 }, body: html(cv.leftovers.join('\n')) })
   }
   doc.blocks = blocks
-  doc.layout.columns =
-    opts.columns > 1 && side.length
-      ? [
-          { id: uid('c'), width: 1, unit: 'fr', panel: false, blocks: main },
-          { id: uid('c'), width: 66, unit: 'mm', panel: true, blocks: side },
-        ]
-      : [{ id: uid('c'), width: 1, unit: 'fr', panel: false, blocks: [...main, ...side] }]
-  doc.layout.gutter = template.layout.gutter
-  return doc
+  doc.layout.columns = [{ id: uid('c'), width: 1, unit: 'fr', panel: false, blocks: blocks.filter((b) => b.type !== 'photo').map((b) => b.id) }]
+  return applyTemplate(doc, opts.template ?? suggestTemplate(opts.columns))
 }

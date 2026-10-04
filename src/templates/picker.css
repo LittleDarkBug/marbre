@@ -1,0 +1,13 @@
+.tpk { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 860px) { .tpk { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.tpk-card { display: grid; gap: 8px; padding: 0; border: 0; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.tpk-page { overflow: hidden; border-radius: 8px; background: #fff; box-shadow: 0 0 0 1px var(--line); transition: box-shadow 160ms var(--ease), transform 200ms var(--ease); }
+.tpk-card:hover .tpk-page { transform: translateY(-2px); box-shadow: 0 0 0 1px var(--line-strong), 0 10px 24px -14px rgba(0, 0, 0, 0.35); }
+.tpk-card[aria-checked='true'] .tpk-page { box-shadow: 0 0 0 2px var(--ink); }
+.tpk-card:focus-visible { outline: none; }
+.tpk-card:focus-visible .tpk-page { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--focus); }
+.tpk-name { display: flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 500; }
+.tpk-card[aria-checked='true'] .tpk-name::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--ink); }
+@media (max-width: 520px) {
+  .tpk { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+}

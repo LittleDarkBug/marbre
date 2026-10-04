@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { useT, useUiLang, type Key } from '../i18n'
+import { autoFit } from '../render/autofit'
+import { applyTemplate } from '../templates/apply'
+import { TemplatePicker } from '../templates/TemplatePicker'
 import { Btn } from '../ui/kit'
+import { suggestTemplate } from './build'
 import { importFile, type ImportResult } from './index'
 import { ImportError } from './types'
 import './import.css'
 
-type Phase = { name: 'pick' } | { name: 'busy'; step: string; ratio?: number } | { name: 'password'; file: File; wrong: boolean } | { name: 'done'; result: ImportResult } | { name: 'error'; code: string }
+type Phase = { name: 'pick' } | { name: 'busy'; step: string; ratio?: number } | { name: 'password'; file: File; wrong: boolean } | { name: 'done'; result: ImportResult } | { name: 'style'; result: ImportResult; template: string } | { name: 'fitting'; result: ImportResult } | { name: 'error'; code: string }
 
 const ACCEPT = '.pdf,.docx,.odt,.html,.htm,.txt,.md,.rtf,.json,image/*,application/pdf'
 
@@ -36,6 +40,13 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
     }
   }
 
+  const create = async (r: ImportResult, template: string) => {
+    setPhase({ name: 'fitting', result: r })
+    const fitted = await autoFit(applyTemplate(r.doc, template))
+    onDone({ ...r, doc: fitted.doc })
+    setPhase({ name: 'pick' })
+  }
+
   const close = () => {
     setPhase({ name: 'pick' })
     onClose()
@@ -47,7 +58,7 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
   const sections = result?.cv?.sections ?? []
 
   return (
-    <dialog ref={dialog} className="imp" aria-labelledby="imp-title" onClose={close} onCancel={close}>
+    <dialog ref={dialog} className={`imp${phase.name === 'style' ? ' is-wide' : ''}`} aria-labelledby="imp-title" onClose={close} onCancel={close}>
       <header className="imp-head">
         <h2 id="imp-title">{t('imp.title')}</h2>
         <Btn icon="x" label={t('ed.close')} onClick={close} />
@@ -134,8 +145,29 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
           {result.kind === 'ocr' && <p className="imp-note imp-warn">{t('imp.ocrDone')}</p>}
           <div className="imp-actions">
             <Btn label={t('imp.other')} showLabel onClick={() => setPhase({ name: 'pick' })} />
-            <button type="button" className="lp-cta" onClick={() => { onDone(result); setPhase({ name: 'pick' }) }}>{t('imp.create')}</button>
+            <button type="button" className="lp-cta" onClick={() => setPhase({ name: 'style', result, template: suggestTemplate(result.source?.columns ?? 1) })}>{t('imp.chooseLayout')}</button>
           </div>
+        </div>
+      )}
+
+      {phase.name === 'style' && (
+        <div className="imp-report">
+          <div>
+            <p className="imp-big">{t('imp.layoutTitle')}</p>
+            <p className="imp-note">{t('imp.layoutNote')}</p>
+          </div>
+          <TemplatePicker content={phase.result.doc} value={phase.template} onChange={(template) => setPhase({ ...phase, template })} />
+          <div className="imp-actions">
+            <Btn label={t('imp.back')} showLabel onClick={() => setPhase({ name: 'done', result: phase.result })} />
+            <button type="button" className="lp-cta" onClick={() => create(phase.result, phase.template)}>{t('imp.create')}</button>
+          </div>
+        </div>
+      )}
+
+      {phase.name === 'fitting' && (
+        <div className="imp-busy" role="status" aria-live="polite">
+          <p className="imp-big">{t('imp.fitting')}</p>
+          <div className="imp-bar"><i style={{ width: '92%' }} /></div>
         </div>
       )}
     </dialog>

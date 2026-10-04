@@ -35,7 +35,8 @@
   padding: 4px 0;
 }
 .ed-name:hover, .ed-name:focus { border-bottom-color: var(--ink); outline: none; }
-.ed-variant { border: 0; border-bottom: 1px solid color-mix(in srgb, var(--ink) 35%, transparent); background: transparent; font-size: 13px; padding: 4px 0; max-width: 200px; }
+.ed-variant.ui-select { width: auto; max-width: 220px; height: 32px; border-color: transparent; background: var(--stone-2); font-size: 13px; font-weight: 500; }
+.ed-variant.ui-select:hover { border-color: var(--line-strong); }
 .ed-tools { margin-left: auto; display: flex; align-items: center; gap: 2px; }
 .ed.is-narrow .ed-variant { display: none; }
 .ed.is-narrow .ed-bar { gap: 8px; padding: 0 4px 0 10px; }
@@ -263,3 +264,11 @@ button.ats-msg { cursor: pointer; text-decoration: underline; text-decoration-th
 
 .ws-lasso { position: absolute; z-index: 20; border: 1px solid #111; background: rgba(17, 17, 17, 0.06); pointer-events: none; }
 .mb-page.is-editing .mb-photo-empty { border: 0; background: color-mix(in srgb, var(--mb-accent) 12%, #fff); font: inherit; font-size: 11px; color: var(--mb-accent); }
+.insp-icon-select.ui-select { width: 44px; flex: none; padding: 0 6px 0 9px; gap: 4px; }
+.insp-icon-select .ui-select-value { display: none; }
+.insp-kind-select.ui-select { width: 128px; flex: none; }
+.var-lang.ui-select { width: 140px; flex: none; }
+.lt { display: grid; gap: 8px; padding: 6px 0 4px; }
+.lt-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.lt-row .ui-btn { background: var(--stone-2); }
+.lt-note { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--ink-2); }

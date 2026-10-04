@@ -5,6 +5,7 @@ import { plain } from '../model/rich'
 import type { Doc, Override } from '../model/schema'
 import { useDoc } from '../store/doc'
 import { Btn, Section } from '../ui/kit'
+import { Select } from '../ui/Select'
 
 function describe(doc: Doc, o: Override) {
   const names: string[] = []
@@ -60,11 +61,13 @@ export function Variants({ doc }: { doc: Doc }) {
           }}
         >
           <input className="ui-input" placeholder={t('var.namePlaceholder')} aria-label={t('var.name')} value={name} onChange={(e) => setName(e.target.value)} />
-          <select aria-label={t('var.lang')} value={lang} onChange={(e) => setLang(e.target.value as '' | 'fr' | 'en')}>
-            <option value="">{t('var.sameLang')}</option>
-            <option value="fr">FR</option>
-            <option value="en">EN</option>
-          </select>
+          <Select<'' | 'fr' | 'en'>
+            className="var-lang"
+            label={t('var.lang')}
+            value={lang}
+            options={[{ value: '', label: t('var.sameLang') }, { value: 'fr', label: 'Français' }, { value: 'en', label: 'English' }]}
+            onChange={setLang}
+          />
           <Btn type="submit" icon="plus" label={t('var.add')} showLabel tone="solid" />
         </form>
       </Section>

@@ -6,6 +6,7 @@ import { loadFamily } from '../render/fonts'
 import { PAGE_MM } from '../render/Page'
 import { useDoc } from '../store/doc'
 import { Btn, ColorField, Field, Scrub, Section, Segmented } from '../ui/kit'
+import { Select } from '../ui/Select'
 import { align, frameOf, removeKeys, restackKeys, setLocked, type Align } from './elements'
 import { pickImage, readImage } from './images'
 
@@ -15,10 +16,14 @@ function FontPick({ label, value, onPick }: { label: string; value?: string; onP
   const t = useT()
   return (
     <Field label={label}>
-      <select value={value ?? ''} style={value ? { fontFamily: `'${value}'` } : undefined} onChange={(e) => { const v = e.target.value || undefined; if (v) loadFamily(v).then(() => onPick(v)); else onPick(undefined) }}>
-        <option value="">{t('style.inherit')}</option>
-        {FONTS.map((f) => <option key={f.family} value={f.family}>{f.family}</option>)}
-      </select>
+      <Select
+        label={label}
+        value={value ?? ''}
+        searchable
+        searchPlaceholder={t('ui.searchFont')}
+        options={[{ value: '', label: t('style.inherit') }, ...FONTS.map((f) => ({ value: f.family, label: f.family, style: { fontFamily: `'${f.family}'` } }))]}
+        onChange={(v) => { if (v) loadFamily(v).then(() => onPick(v)); else onPick(undefined) }}
+      />
     </Field>
   )
 }

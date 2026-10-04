@@ -60,7 +60,8 @@ test('a variant changes the page without touching the base', async ({ page, isMo
   await page.keyboard.press('Enter')
   await expect(title).toHaveText('Data Scientist senior')
   if (!isMobile) {
-    await page.locator('.ed-variant').selectOption({ index: 0 })
+    await page.locator('.ed-variant').click()
+    await page.getByRole('option').first().click()
     await expect(field(page, 'blocks/id/title')).toHaveText(original!)
   }
 })
@@ -150,4 +151,16 @@ test('print opens the dialog without a popup', async ({ page, context, isMobile 
   await fromTemplate(page)
   await page.getByRole('button', { name: /imprimer en pdf|print to pdf/i }).first().click()
   await expect.poll(() => page.evaluate(() => (window as unknown as { __printed?: string }).__printed ?? null), { timeout: 15000 }).toContain('Camille Martin')
+})
+
+test('variant picker is a styled listbox usable with the keyboard', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'header picker hidden on narrow screens')
+  await fromTemplate(page)
+  const picker = page.getByRole('combobox', { name: /variantes|variants/i })
+  await picker.focus()
+  await page.keyboard.press('ArrowDown')
+  await expect(page.getByRole('listbox')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('listbox')).toHaveCount(0)
+  await expect(page.locator('select')).toHaveCount(0)
 })

@@ -155,6 +155,28 @@ describe('parse', () => {
     expect(cv.sections[1].groups.map((g) => g.label)).toEqual(['Languages', 'Tools'])
   })
 
+  it('keeps links and emails that belong to a section inside it', () => {
+    y = 0
+    const cv = parse(
+      source([
+        line('Jane Roe', { size: 24, bold: true }),
+        line('jane@example.org · github.com/janeroe'),
+        line('PROJECTS', { size: 12, bold: true }),
+        line('Weather app', { bold: true, side: ['2023'] }),
+        line('github.com/janeroe/weather'),
+        line('• Forecast dashboard built with React and a public API'),
+        line('REFERENCES', { size: 12, bold: true }),
+        line('John Smith: john.smith@acme.example'),
+        line('CONTACT', { size: 12, bold: true }),
+        line('+33 6 12 34 56 78'),
+      ]),
+    )
+    expect(cv.contacts.map((c) => c.text).sort()).toEqual(['+33 6 12 34 56 78', 'github.com/janeroe', 'jane@example.org'])
+    const project = cv.sections.find((s) => s.kind === 'projects')!.entries[0]
+    expect([project.title, project.org, project.meta, project.body, ...project.bullets].join(' ')).toContain('github.com/janeroe/weather')
+    expect(cv.sections.find((s) => s.kind === 'references')!.pairs[0].value).toContain('john.smith@acme.example')
+  })
+
   it('never loses text: unclassified lines become leftovers', () => {
     y = 0
     const src = source([line('Jane Roe', { size: 22, bold: true }), line('zzq xqv wwk'), line('EXPERIENCE', { size: 12, bold: true }), line('Something odd happened here', { bold: true })])

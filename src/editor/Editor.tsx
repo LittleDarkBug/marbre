@@ -8,6 +8,7 @@ import { readDoc, saveDoc, writeToFolder } from '../store/persist'
 import { useTheme } from '../app/theme'
 import { Btn, Drawer, Icon, useMedia } from '../ui/kit'
 import { Wordmark } from '../ui/Wordmark'
+import { Select } from '../ui/Select'
 import { ExportPanel, printDoc } from './ExportPanel'
 import { Inspector } from './Inspector'
 import { Outline } from './Outline'
@@ -140,12 +141,14 @@ export function Editor({ id }: { id: string }) {
           value={base.name}
           onChange={(e) => useDoc.getState().editBase((d) => { d.name = e.target.value })}
         />
-        <select className="ed-variant" aria-label={t('panel.variants')} value={variantId ?? ''} onChange={(e) => setVariant(e.target.value || null)}>
-          <option value="">{t('var.base')}</option>
-          {base.variants.map((v) => (
-            <option key={v.id} value={v.id}>{v.name}</option>
-          ))}
-        </select>
+        <Select
+          className="ed-variant"
+          label={t('panel.variants')}
+          value={variantId ?? ''}
+          width={240}
+          options={[{ value: '', label: t('var.base'), hint: t('var.baseHint') }, ...base.variants.map((v) => ({ value: v.id, label: v.name, hint: v.lang ? v.lang.toUpperCase() : undefined }))]}
+          onChange={(v) => setVariant(v || null)}
+        />
         <div className="ed-tools">
           <Btn icon="arrow-counter-clockwise" label={t('nav.undo')} disabled={!past.length} onClick={undo} />
           <Btn icon="arrow-clockwise" label={t('nav.redo')} disabled={!future.length} onClick={redo} />

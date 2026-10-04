@@ -80,6 +80,8 @@ function splitNameTitle(text: string): [string, string] | null {
   return null
 }
 
+const KEEP_LINKS = new Set<SectionKind>(['projects', 'experience', 'education', 'publications', 'references', 'certifications', 'awards', 'volunteering'])
+
 function takeContacts(rows: Row[], limit: number, headLimit: number, extra: Set<Row>): ParsedContact[] {
   const contacts: ParsedContact[] = []
   const seen = new Set<string>()
@@ -90,7 +92,24 @@ function takeContacts(rows: Row[], limit: number, headLimit: number, extra: Set<
       contacts.push(c)
     }
   }
-  const scan = [...rows.slice(0, limit), ...[...extra].filter((r) => rows.indexOf(r) >= limit)]
+  const heads = rows
+    .filter((r) => !r.bullet && r.text.length <= 48 && (sectionOf(r.text, true) || CONTACT_HEADING.test(r.text)))
+    .map((r) => ({ r, kind: CONTACT_HEADING.test(r.text) ? null : sectionOf(r.text, true) }))
+  const kindAt = (row: Row) => {
+    let best: { kind: SectionKind | null; d: number } | null = null
+    for (const h of heads) {
+      const d = row.y0 - h.r.y0
+      if (h.r.page !== row.page || d <= 0 || Math.abs(h.r.x0 - row.x0) > 60) continue
+      if (!best || d < best.d) best = { kind: h.kind, d }
+    }
+    return best?.kind ?? null
+  }
+  const pure = (r: Row) => {
+    let rest = [r.text, ...(r.side ?? [])].join(' ')
+    for (const re of [EMAIL, LINKEDIN, GITHUB, URL, PHONE, POSTCODE_CITY]) rest = rest.replace(new RegExp(re.source, `${re.flags.replace('g', '')}g`), ' ')
+    return rest !== [r.text, ...(r.side ?? [])].join(' ') && rest.replace(LABEL, ' ').replace(/[^\p{L}\p{N}]/gu, '').length <= 2
+  }
+  const scan = rows.filter((r, i) => i < headLimit || extra.has(r) || (i < limit && pure(r) && !KEEP_LINKS.has(kindAt(r) ?? 'other')))
   for (const [index, row] of scan.entries()) {
     const parts = [row.text, ...(row.side ?? [])]
     const kept: string[] = []

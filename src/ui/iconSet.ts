@@ -39,6 +39,10 @@ import iHouse from '@phosphor-icons/core/assets/regular/house.svg?raw'
 import iScan from '@phosphor-icons/core/assets/regular/scan.svg?raw'
 import iSelectionSlash from '@phosphor-icons/core/assets/regular/selection-slash.svg?raw'
 import iDotsThree from '@phosphor-icons/core/assets/regular/dots-three.svg?raw'
+import iMagnifyingGlass from '@phosphor-icons/core/assets/regular/magnifying-glass.svg?raw'
+import iCaretUpDown from '@phosphor-icons/core/assets/regular/caret-up-down.svg?raw'
+import iLayout from '@phosphor-icons/core/assets/regular/layout.svg?raw'
+import iArrowsIn from '@phosphor-icons/core/assets/regular/arrows-in-simple.svg?raw'
 
 export const UI_ICONS = {
   'arrow-counter-clockwise': iArrowCounterClockwise,
@@ -82,6 +86,10 @@ export const UI_ICONS = {
   'scan': iScan,
   'selection-slash': iSelectionSlash,
   'dots-three': iDotsThree,
+  'magnifying-glass': iMagnifyingGlass,
+  'caret-up-down': iCaretUpDown,
+  'layout': iLayout,
+  'arrows-in-simple': iArrowsIn,
 }
 
 export type UiIcon = keyof typeof UI_ICONS
