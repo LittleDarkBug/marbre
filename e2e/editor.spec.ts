@@ -120,3 +120,34 @@ test('adds an icon and a shape from the elements panel', async ({ page, isMobile
   await page.getByRole('button', { name: /^arrondi$|^rounded$/i }).click()
   await expect(page.locator('.mb-page.is-editing .mb-decor-rect')).toHaveCount(1)
 })
+
+test('resizing a free element follows the pointer', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'pointer resize on desktop')
+  await fromTemplate(page)
+  await page.getByRole('button', { name: /^rectangle$/i }).click()
+  const shape = page.locator('.mb-page.is-editing [data-decor]').last()
+  const before = (await shape.boundingBox())!
+  const handle = (await page.locator('.mb-moveable .moveable-control.moveable-se').first().boundingBox())!
+  const sx = handle.x + handle.width / 2
+  const sy = handle.y + handle.height / 2
+  await page.mouse.move(sx, sy)
+  await page.mouse.down()
+  for (let i = 1; i <= 10; i++) await page.mouse.move(sx + 4 * i, sy + 3 * i)
+  await page.mouse.up()
+  const after = (await shape.boundingBox())!
+  expect(Math.abs(after.width - before.width - 40)).toBeLessThan(4)
+  expect(Math.abs(after.height - before.height - 30)).toBeLessThan(4)
+  expect(Math.abs(after.x - before.x)).toBeLessThan(2)
+})
+
+test('print opens the dialog without a popup', async ({ page, context, isMobile }) => {
+  test.skip(isMobile, 'print button on desktop')
+  await context.addInitScript(() => {
+    window.print = () => {
+      ;(window.top as unknown as { __printed?: string }).__printed = document.querySelector('.mb-print .mb-page')?.textContent ?? ''
+    }
+  })
+  await fromTemplate(page)
+  await page.getByRole('button', { name: /imprimer en pdf|print to pdf/i }).first().click()
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __printed?: string }).__printed ?? null), { timeout: 15000 }).toContain('Camille Martin')
+})

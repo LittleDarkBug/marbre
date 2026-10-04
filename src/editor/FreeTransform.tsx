@@ -60,6 +60,10 @@ export function FreeTransform({ doc, scale, label }: { doc: Doc; scale: number; 
   }
   const page = PAGE_MM[doc.page.format]
   const m = doc.page.margin
+  const decorKind = decor ? doc.layout.decor.find((x) => x.id === target.key.slice(6))?.kind : undefined
+  const block = decor ? undefined : doc.blocks.find((b) => b.id === target.key)
+  const ratio = decorKind === 'image' || decorKind === 'qr' || decorKind === 'icon' || block?.type === 'photo'
+  const minPx = 3 * MM
   const others = Array.from(document.querySelectorAll<HTMLElement>('.mb-page.is-editing [data-frame], .mb-page.is-editing [data-decor]')).filter((el) => el !== target.el)
 
   return (
@@ -85,6 +89,7 @@ export function FreeTransform({ doc, scale, label }: { doc: Doc; scale: number; 
       target={target.el}
       draggable
       resizable
+      keepRatio={ratio}
       rotatable
       snappable
       origin={false}
@@ -107,6 +112,12 @@ export function FreeTransform({ doc, scale, label }: { doc: Doc; scale: number; 
       onDragEnd={(e) => {
         const el = e.target as HTMLElement
         commit(target.key, { x: round(el.offsetLeft / MM), y: round(el.offsetTop / MM) })
+      }}
+      onResizeStart={(e) => {
+        const el = e.target as HTMLElement
+        e.set([el.offsetWidth, el.offsetHeight])
+        if (e.dragStart) e.dragStart.set([el.offsetLeft, el.offsetTop])
+        e.setMin([minPx, decorKind === 'line' || decorKind === 'rule' ? 1 : minPx])
       }}
       onResize={(e) => {
         e.target.style.width = `${e.width}px`

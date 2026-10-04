@@ -7,10 +7,26 @@ import { Btn, Section } from '../ui/kit'
 
 const isChromium = () => /Chrome\/|Edg\//.test(navigator.userAgent) && !/OPR\//.test(navigator.userAgent)
 
+let printing: HTMLIFrameElement | null = null
+
 export async function printDoc(base: Doc, variantId: string | null) {
   await saveDoc(base)
+  printing?.remove()
   const query = new URLSearchParams({ auto: '1', ...(variantId ? { variant: variantId } : {}) })
-  window.open(`${window.location.pathname}#/print/${base.id}?${query}`, '_blank')
+  const frame = document.createElement('iframe')
+  frame.className = 'print-frame'
+  frame.setAttribute('aria-hidden', 'true')
+  frame.tabIndex = -1
+  frame.src = `${window.location.pathname}#/print/${base.id}?${query}`
+  const done = (e: MessageEvent) => {
+    if (e.source !== frame.contentWindow || e.data !== 'marbre:printed') return
+    window.removeEventListener('message', done)
+    setTimeout(() => frame.remove(), 500)
+    if (printing === frame) printing = null
+  }
+  window.addEventListener('message', done)
+  document.body.appendChild(frame)
+  printing = frame
 }
 
 export function ExportPanel({ doc }: { doc: Doc }) {

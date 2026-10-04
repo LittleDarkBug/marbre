@@ -34,3 +34,4 @@ button, input, select, textarea { font: inherit; color: inherit; }
 *::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--ink) 20%, transparent); border-radius: 10px; border: 3px solid transparent; background-clip: padding-box; }
 *::-webkit-scrollbar-thumb:hover { background-color: color-mix(in srgb, var(--ink) 38%, transparent); }
 *::-webkit-scrollbar-corner { background: transparent; }
+.print-frame { position: fixed; left: -10000px; top: 0; width: 900px; height: 1200px; border: 0; opacity: 0; pointer-events: none; }

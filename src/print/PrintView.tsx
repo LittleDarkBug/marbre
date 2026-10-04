@@ -55,7 +55,12 @@ export function PrintView({ id, variant, auto }: { id: string; variant: string |
           w.__MARBRE_FIT__ = fit
           if (ready && !w.__MARBRE_READY__) {
             w.__MARBRE_READY__ = true
-            if (auto) setTimeout(() => window.print(), 300)
+            if (auto) {
+              setTimeout(() => {
+                window.print()
+                if (window.parent !== window) window.parent.postMessage('marbre:printed', window.location.origin)
+              }, 300)
+            }
           }
         }}
       />
