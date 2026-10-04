@@ -51,7 +51,7 @@ export function blankDoc(name = 'CV', lang: 'fr' | 'en' = 'fr'): Doc {
     name,
     lang,
     updatedAt: new Date().toISOString(),
-    page: { format: 'A4', margin: { top: 12, right: 12, bottom: 10, left: 12 } },
+    page: { format: 'A4', fit: 'one', margin: { top: 12, right: 12, bottom: 10, left: 12 } },
     theme: defaultTheme(),
     layout: {
       mode: 'flow',

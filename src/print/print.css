@@ -1,0 +1,3 @@
+.mb-print { background: #fff; min-height: 100vh; }
+@media screen { .mb-print { display: flex; justify-content: center; padding: 24px 0; background: var(--stone); } }
+@media print { html, body, #root { background: #fff !important; } .mb-print { padding: 0; } }

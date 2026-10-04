@@ -17,6 +17,22 @@ export const fr = {
   'docs.folder': 'Ouvrir un dossier',
   'docs.updated': 'Modifié le {date}',
   'error.file': 'Ce fichier ne peut pas être lu : {reason}',
+  'hint.heading': 'Titre de section',
+  'hint.name': 'Nom',
+  'hint.title': 'Titre du poste visé',
+  'hint.text': 'Texte',
+  'hint.tags': 'Technologies',
+  'hint.dates': 'Dates',
+  'hint.entry': 'Intitulé',
+  'hint.subtitle': 'Spécialité',
+  'hint.org': 'Organisation',
+  'hint.meta': 'Lieu, contrat',
+  'hint.body': 'Description',
+  'hint.bullet': 'Réalisation',
+  'hint.label': 'Catégorie',
+  'hint.items': 'Éléments, séparés par des virgules',
+  'hint.key': 'Élément',
+  'hint.value': 'Précision',
 } as const
 
 export type Key = keyof typeof fr

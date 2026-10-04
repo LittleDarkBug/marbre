@@ -123,6 +123,7 @@ export const Layout = z.object({
 
 export const Page = z.object({
   format: z.enum(['A4', 'Letter']),
+  fit: z.enum(['one', 'flow']).default('one'),
   margin: z.object({ top: z.number(), right: z.number(), bottom: z.number(), left: z.number() }),
 })
 
