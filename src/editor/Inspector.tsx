@@ -1,5 +1,5 @@
 import { useT } from '../i18n'
-import type { Block, Contact, Doc, FontRole, IdentityBlock } from '../model/schema'
+import type { Block, Contact, Doc, FontRole, Frame, IdentityBlock } from '../model/schema'
 import { uid } from '../model/ids'
 import { FONTS, fontSpec } from '../render/fontLibrary'
 import { loadFamily } from '../render/fonts'
@@ -206,8 +206,84 @@ function BlockPanel({ block }: { block: Block }) {
   )
 }
 
+const FRAME_KEYS = ['x', 'y', 'w', 'h', 'rotate'] as const
+
+function FrameScrubs({ frame, onChange }: { frame: Frame; onChange: (k: (typeof FRAME_KEYS)[number], v: number) => void }) {
+  const t = useT()
+  return (
+    <>
+      {FRAME_KEYS.map((k) => (
+        <Scrub key={k} label={t(`frame.${k}`)} unit={k === 'rotate' ? 'deg' : 'mm'} step={k === 'rotate' ? 1 : 0.5} min={k === 'rotate' ? -180 : 0} max={k === 'rotate' ? 180 : 300} value={frame[k]} onChange={(v) => onChange(k, v)} />
+      ))}
+    </>
+  )
+}
+
+function DecorPanel({ doc, id }: { doc: Doc; id: string }) {
+  const t = useT()
+  const edit = useDoc((s) => s.edit)
+  const select = useDoc((s) => s.select)
+  const decor = doc.layout.decor.find((d) => d.id === id)
+  if (!decor) return null
+  const at = (d: Doc) => d.layout.decor.find((x) => x.id === id)!
+  const named = ['accent', 'ink', 'panel']
+  return (
+    <Section title={t(`decor.${decor.kind}`)} aside={<Btn label={t('insp.document')} showLabel onClick={() => select(null)} />}>
+      <Field label={t('decor.color')}>
+        <select value={named.includes(decor.color) ? decor.color : 'custom'} onChange={(e) => edit((d) => { at(d).color = e.target.value === 'custom' ? '#15120e' : e.target.value })}>
+          <option value="accent">{t('color.accent')}</option>
+          <option value="ink">{t('color.ink')}</option>
+          <option value="panel">{t('color.panel')}</option>
+          <option value="custom">{t('decor.custom')}</option>
+        </select>
+      </Field>
+      {!named.includes(decor.color) && <ColorField label={t('decor.custom')} value={decor.color} onChange={(v) => edit((d) => { at(d).color = v }, { merge: `${id}c` })} />}
+      {(decor.kind === 'rect' || decor.kind === 'ellipse') && (
+        <>
+          <Btn label={t('decor.fill')} pressed={decor.fill} onClick={() => edit((d) => { at(d).fill = !decor.fill })} />
+          <Scrub label={t('decor.stroke')} unit="mm" step={0.1} min={0} max={5} value={decor.stroke} onChange={(v) => edit((d) => { at(d).stroke = v }, { merge: `${id}s` })} />
+        </>
+      )}
+      {decor.kind === 'icon' && (
+        <Field label={t('insp.icon')}>
+          <select value={decor.icon} onChange={(e) => edit((d) => { at(d).icon = e.target.value })}>
+            {Object.keys(ICONS).map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+        </Field>
+      )}
+      <FrameScrubs frame={decor.frame} onChange={(k, v) => edit((d) => { at(d).frame[k] = v }, { merge: `${id}${k}` })} />
+      <p className="insp-note">{t('decor.note')}</p>
+    </Section>
+  )
+}
+
+function FramePanel({ doc, id }: { doc: Doc; id: string }) {
+  const t = useT()
+  const edit = useDoc((s) => s.edit)
+  const frame = doc.layout.frames[id]
+  if (!frame) return null
+  return (
+    <Section title={t('frame.title')}>
+      <FrameScrubs frame={frame} onChange={(k, v) => edit((d) => { d.layout.frames[id][k] = v }, { merge: `${id}${k}` })} />
+      {frame.rotate !== 0 && <p className="insp-note">{t('frame.rotateWarning')}</p>}
+    </Section>
+  )
+}
+
 export function Inspector({ doc }: { doc: Doc }) {
   const selection = useDoc((s) => s.selection)
+  if (selection && selection.blockId.startsWith('decor:')) {
+    return (
+      <div className="insp">
+        <DecorPanel doc={doc} id={selection.blockId.slice(6)} />
+      </div>
+    )
+  }
   const block = selection ? doc.blocks.find((b) => b.id === selection.blockId) : null
-  return <div className="insp">{block ? <BlockPanel block={block} /> : <DocumentPanel doc={doc} />}</div>
+  return (
+    <div className="insp">
+      {block ? <BlockPanel block={block} /> : <DocumentPanel doc={doc} />}
+      {block && doc.layout.frames[block.id] && <FramePanel doc={doc} id={block.id} />}
+    </div>
+  )
 }

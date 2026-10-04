@@ -2,7 +2,8 @@ import { useT } from '../i18n'
 import type { Doc } from '../model/schema'
 import { useDoc } from '../store/doc'
 import { Btn } from '../ui/kit'
-import { columnOf, detachBlock, duplicateBlock, insertBullet, insertItem, moveBlock, moveInList, removeBlock, removeFromList } from './actions'
+import { columnOf, detachBlock, duplicateBlock, duplicateDecor, insertBullet, insertItem, moveBlock, moveInList, removeBlock, removeDecor, removeFromList, restack } from './actions'
+import { decorKey, isDecorKey } from './FreeTransform'
 import { focusPath } from './EditableField'
 import { currentScale, pageEl, pageRect, selectedEl } from './geometry'
 import { useSelectionRects } from './Overlay'
@@ -24,6 +25,36 @@ export function SelectionBar({ doc, scale }: { doc: Doc; scale: number }) {
   const edit = useDoc((s) => s.edit)
   const select = useDoc((s) => s.select)
   if (!selection || !rects.block) return null
+  if (isDecorKey(selection.blockId)) {
+    const id = selection.blockId.slice(6)
+    const r = rects.block
+    return (
+      <div className="selbar" role="toolbar" aria-label={t('sel.toolbar')} style={{ left: Math.max(0, r.x * scale), top: Math.max(0, r.y * scale - 46) }} onPointerDown={(e) => e.stopPropagation()}>
+        <Btn icon="arrow-up" label={t('sel.forward')} onClick={() => edit((d) => restack(d, id, 1))} />
+        <Btn icon="arrow-down" label={t('sel.backward')} onClick={() => edit((d) => restack(d, id, -1))} />
+        <Btn
+          icon="copy"
+          label={t('sel.duplicate')}
+          onClick={() => {
+            let copy: string | null = null
+            edit((d) => {
+              copy = duplicateDecor(d, id)
+            })
+            if (copy) select({ blockId: decorKey(copy) })
+          }}
+        />
+        <Btn
+          icon="trash"
+          tone="proof"
+          label={t('sel.deleteItem')}
+          onClick={() => {
+            edit((d) => removeDecor(d, id))
+            select(null)
+          }}
+        />
+      </div>
+    )
+  }
   const block = doc.blocks.find((b) => b.id === selection.blockId)
   if (!block) return null
   const r = rects.item ?? rects.block

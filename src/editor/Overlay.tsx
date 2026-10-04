@@ -3,6 +3,8 @@ import type { Doc } from '../model/schema'
 import { MM } from '../render/Page'
 import { useDoc } from '../store/doc'
 import { currentScale, pageEl, pageRect, selectedEl, type Rect } from './geometry'
+import { Thread } from './Thread'
+import { useEditorUi } from './uiState'
 
 const L = 9
 const G = 3
@@ -111,9 +113,12 @@ function ColumnHandles({ doc }: { doc: Doc }) {
 
 export function Overlay({ doc }: { doc: Doc }) {
   const rects = useSelectionRects(doc)
+  const thread = useEditorUi((s) => s.thread)
+  const showThread = thread || doc.layout.mode === 'free' || Object.keys(doc.layout.frames).length > 0
   return (
     <div className="ov" aria-hidden="true">
       <svg className="ov-svg">
+        {showThread && <Thread doc={doc} />}
         {rects.block && <Crop r={rects.block} strong={!rects.item} />}
         {rects.item && <Crop r={rects.item} strong />}
       </svg>

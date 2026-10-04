@@ -1,0 +1,25 @@
+import { resolve } from 'node:path'
+import { launch } from '../cli/browser'
+import { serve } from '../cli/serve'
+
+const { url, server } = await serve(resolve('dist'))
+const browser = await launch()
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
+page.on('pageerror', (e) => console.log('pageerror', e.message))
+await page.goto(url + '/#/')
+await page.locator('.tpl').first().click()
+await page.waitForSelector('.mb-page.is-editing')
+await page.getByRole('button', { name: /^variantes$/i }).first().click()
+await page.getByLabel(/nom de la variante/i).last().fill('Offre Lyon')
+await page.getByRole('button', { name: /créer/i }).last().click()
+const st = () => page.evaluate(() => { const s = (window as any).marbre.store.getState(); return { v: s.variantId, n: s.base.variants.length, title: s.base.blocks[0].title, ov: s.base.variants[0]?.overrides } })
+console.log('after create', JSON.stringify(await st()))
+const title = page.locator('[data-path="blocks/id/title"]')
+await title.click()
+console.log('after click', JSON.stringify(await st()))
+await page.keyboard.press('Control+A')
+await page.keyboard.type('XX')
+await page.keyboard.press('Enter')
+console.log('after edit', JSON.stringify(await st()))
+await browser.close()
+server.close()

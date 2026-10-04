@@ -98,6 +98,8 @@ export function Editor({ id }: { id: string }) {
   const openDrawer = useEditorUi((s) => s.openDrawer)
   const lens = useEditorUi((s) => s.lens)
   const toggleLens = useEditorUi((s) => s.toggleLens)
+  const thread = useEditorUi((s) => s.thread)
+  const toggleThread = useEditorUi((s) => s.toggleThread)
   const wide = useMedia('(min-width: 1100px)')
   const medium = useMedia('(min-width: 760px)')
   const lang = useUiLang((s) => s.lang)
@@ -154,6 +156,7 @@ export function Editor({ id }: { id: string }) {
         <div className="ed-tools">
           <Btn icon="arrow-counter-clockwise" label={t('nav.undo')} disabled={!past.length} onClick={undo} />
           <Btn icon="arrow-clockwise" label={t('nav.redo')} disabled={!future.length} onClick={redo} />
+          {medium && <Btn icon="path" label={t('thread.toggle')} pressed={thread} onClick={toggleThread} />}
           {medium && <Btn icon="scan" label={t('ats.lens')} showLabel={wide} pressed={lens} onClick={toggleLens} />}
           {medium && <Btn icon="printer" label={t('nav.print')} showLabel={wide} tone="solid" onClick={() => printDoc(base, variantId)} />}
           <Btn icon={theme === 'dark' ? 'sun' : 'moon'} label={t(theme === 'dark' ? 'nav.theme.light' : 'nav.theme.dark')} onClick={toggle} />

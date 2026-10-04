@@ -2,7 +2,7 @@ import { current, isDraft } from 'immer'
 import { newBlock, newEntry } from '../model/factories'
 import { uid } from '../model/ids'
 import { getAt } from '../model/paths'
-import type { Block, BlockType, Doc } from '../model/schema'
+import type { Block, BlockType, Decor, Doc } from '../model/schema'
 
 type List = { id: string }[]
 
@@ -168,4 +168,30 @@ export function removeColumn(doc: Doc, columnId: string) {
   if (!col) return
   doc.layout.columns = doc.layout.columns.filter((c) => c.id !== columnId)
   doc.layout.columns[0].blocks.push(...col.blocks)
+}
+
+export function addDecor(doc: Doc, kind: Decor['kind'], icon?: string) {
+  const id = uid('o')
+  const size = kind === 'rule' ? { w: 60, h: 0.6 } : kind === 'icon' ? { w: 12, h: 12 } : { w: 30, h: 30 }
+  const z = Math.max(0, ...doc.layout.decor.map((d) => d.frame.z)) + 1
+  doc.layout.decor.push({ id, kind, frame: { x: 20, y: 20, ...size, rotate: 0, z }, color: 'accent', stroke: 0.4, fill: kind !== 'ellipse', icon })
+  return id
+}
+
+export function removeDecor(doc: Doc, id: string) {
+  doc.layout.decor = doc.layout.decor.filter((d) => d.id !== id)
+}
+
+export function duplicateDecor(doc: Doc, id: string) {
+  const src = doc.layout.decor.find((d) => d.id === id)
+  if (!src) return null
+  const copy = { ...(isDraft(src) ? current(src) : structuredClone(src)), id: uid('o') }
+  copy.frame = { ...copy.frame, x: copy.frame.x + 5, y: copy.frame.y + 5 }
+  doc.layout.decor.push(copy)
+  return copy.id
+}
+
+export function restack(doc: Doc, id: string, delta: number) {
+  const d = doc.layout.decor.find((x) => x.id === id)
+  if (d) d.frame.z = Math.max(-5, Math.min(50, d.frame.z + delta))
 }

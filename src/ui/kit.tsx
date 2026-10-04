@@ -144,7 +144,7 @@ export function Drawer({ open, onClose, title, closeLabel, children }: { open: b
           <h2>{title}</h2>
           <Btn icon="x" label={closeLabel} onClick={onClose} />
         </header>
-        <div className="ui-drawer-body">{children}</div>
+        <div className="ui-drawer-body">{open ? children : null}</div>
       </div>
     </div>
   )

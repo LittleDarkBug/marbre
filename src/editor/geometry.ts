@@ -16,7 +16,9 @@ export function selectedEl(sel: { blockId: string; itemId?: string } | null) {
   if (!sel) return null
   const page = pageEl()
   if (!page) return null
-  const block = page.querySelector<HTMLElement>(`[data-block="${CSS.escape(sel.blockId)}"]`)
+  if (sel.blockId.startsWith('decor:')) return page.querySelector<HTMLElement>(`[data-decor="${CSS.escape(sel.blockId.slice(6))}"]`)
+  const frame = page.querySelector<HTMLElement>(`[data-frame="${CSS.escape(sel.blockId)}"]`)
+  const block = frame && !sel.itemId ? frame : page.querySelector<HTMLElement>(`[data-block="${CSS.escape(sel.blockId)}"]`)
   if (!sel.itemId || !block) return block
   return block.querySelector<HTMLElement>(`[data-item="${CSS.escape(sel.itemId)}"]`) ?? block
 }

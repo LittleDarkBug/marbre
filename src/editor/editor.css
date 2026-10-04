@@ -164,3 +164,30 @@
   .gauge { left: 8px; right: 8px; top: 8px; bottom: auto; flex-wrap: wrap; justify-content: center; }
   .selbar { position: fixed; left: 0 !important; right: 0; top: auto !important; bottom: calc(54px + env(safe-area-inset-bottom)); justify-content: space-around; border-left: 0; border-right: 0; }
 }
+
+.thread-line { fill: none; stroke: #15120e; stroke-width: 0.9; stroke-dasharray: 2 2.5; opacity: 0.7; }
+.thread-pin circle { fill: #fbfaf7; stroke: #15120e; stroke-width: 1; }
+.thread-pin text { font-family: var(--mono); font-size: 9px; text-anchor: middle; fill: #15120e; }
+.thread-pin.is-bad circle { stroke: #c8321a; fill: #c8321a; }
+.thread-pin.is-bad text { fill: #fbfaf7; }
+
+.mb-moveable { --moveable-color: #15120e; }
+.mb-moveable .moveable-line { background: #15120e !important; height: 1px !important; }
+.mb-moveable .moveable-control {
+  width: 9px !important;
+  height: 9px !important;
+  margin-top: -4.5px !important;
+  margin-left: -4.5px !important;
+  border: 1px solid #15120e !important;
+  border-radius: 0 !important;
+  background: #fbfaf7 !important;
+}
+.mb-moveable .moveable-rotation .moveable-rotation-control { border-radius: 50% !important; background: #15120e !important; }
+.mb-moveable .moveable-guideline, .mb-moveable .moveable-gap { background: #15120e !important; opacity: 0.6; }
+.mb-moveable .moveable-snap-digit, .mb-moveable .moveable-size-value { font-family: var(--mono) !important; color: #15120e !important; background: #fbfaf7 !important; border-radius: 0 !important; }
+@media (pointer: coarse) {
+  .mb-moveable .moveable-control { width: 18px !important; height: 18px !important; margin-top: -9px !important; margin-left: -9px !important; }
+}
+.mb-page.is-editing .mb-decor { cursor: move; }
+
+.ft-grip { position: absolute; display: grid; place-items: center; background: #15120e; color: #fbfaf7; cursor: move; touch-action: none; z-index: 40; }

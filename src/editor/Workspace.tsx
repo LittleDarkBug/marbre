@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useT } from '../i18n'
 import type { Doc } from '../model/schema'
 import { RenderCtx } from '../render/context'
 import { MM, PAGE_MM, Page, type Fit } from '../render/Page'
 import { useDoc } from '../store/doc'
 import { editApi } from './editApi'
+import { FreeTransform, decorKey } from './FreeTransform'
 import { Overlay } from './Overlay'
 import { Rulers } from './Rulers'
 import { SelectionBar } from './SelectionBar'
@@ -12,6 +14,7 @@ import { useEditorUi } from './uiState'
 const PAD = 40
 
 export function Workspace({ doc, onFit }: { doc: Doc; onFit: (f: Fit) => void }) {
+  const t = useT()
   const scroller = useRef<HTMLDivElement>(null)
   const { zoom, fitZoom, setZoom } = useEditorUi()
   const [width, setWidth] = useState(0)
@@ -88,7 +91,10 @@ export function Workspace({ doc, onFit }: { doc: Doc; onFit: (f: Fit) => void })
       ref={scroller}
       className="ws"
       onPointerDown={(e) => {
-        if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains('ws-stage')) useDoc.getState().select(null)
+        const target = e.target as HTMLElement
+        const decor = target.closest<HTMLElement>('[data-decor]')
+        if (decor) useDoc.getState().select({ blockId: decorKey(decor.dataset.decor!) })
+        else if (target === e.currentTarget || target.classList.contains('ws-stage')) useDoc.getState().select(null)
       }}
     >
       <div className="ws-stage" style={{ width: pageW * scale + pad * 2 + offset, height: contentH * scale + pad * 2 + offset }}>
@@ -99,6 +105,7 @@ export function Workspace({ doc, onFit }: { doc: Doc; onFit: (f: Fit) => void })
               <Page doc={doc} onFit={handleFit} className="is-editing" />
             </RenderCtx.Provider>
             <Overlay doc={doc} />
+            <FreeTransform doc={doc} scale={scale} label={t('frame.move')} />
           </div>
           <SelectionBar doc={doc} scale={scale} />
         </div>

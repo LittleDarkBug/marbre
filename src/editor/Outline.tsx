@@ -7,7 +7,8 @@ import type { Block, BlockType, Doc } from '../model/schema'
 import { plain } from '../model/rich'
 import { useDoc } from '../store/doc'
 import { Btn, Icon, Section } from '../ui/kit'
-import { addBlock, moveBlock } from './actions'
+import { addBlock, addDecor, moveBlock } from './actions'
+import { decorKey } from './FreeTransform'
 
 const label = (b: Block, t: (k: Key) => string) => (b.type === 'identity' ? b.name || t('block.identity') : plain(b.heading) || t(`block.${b.type}`))
 
@@ -123,6 +124,25 @@ export function Outline({ doc }: { doc: Doc }) {
             </ol>
           </div>
         )}
+      </Section>
+      <Section title={t('ol.decor')}>
+        <div className="ol-add">
+          {(['rule', 'rect', 'ellipse', 'icon'] as const).map((kind) => (
+            <Btn
+              key={kind}
+              icon="plus"
+              showLabel
+              label={t(`decor.${kind}`)}
+              onClick={() => {
+                let id = ''
+                edit((d) => {
+                  id = addDecor(d, kind, kind === 'icon' ? 'star' : undefined)
+                })
+                select({ blockId: decorKey(id) })
+              }}
+            />
+          ))}
+        </div>
       </Section>
       <Section title={t('ol.add')}>
         <div className="ol-add">
