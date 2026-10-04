@@ -53,6 +53,7 @@ test('a variant changes the page without touching the base', async ({ page, isMo
   await page.getByRole('button', { name: /créer|create/i }).click()
   if (isMobile) await page.getByRole('dialog').getByRole('button', { name: /fermer|close/i }).click()
   const title = field(page, 'blocks/id/title')
+  const original = await title.textContent()
   await title.click()
   await page.keyboard.press('Control+A')
   await page.keyboard.type('Data Scientist senior')
@@ -60,7 +61,7 @@ test('a variant changes the page without touching the base', async ({ page, isMo
   await expect(title).toHaveText('Data Scientist senior')
   if (!isMobile) {
     await page.locator('.ed-variant').selectOption({ index: 0 })
-    await expect(field(page, 'blocks/id/title')).toHaveText('Ingénieure Data et Machine Learning')
+    await expect(field(page, 'blocks/id/title')).toHaveText(original!)
   }
 })
 
