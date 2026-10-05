@@ -144,3 +144,19 @@
 .ui-svg { display: inline-flex; width: 16px; height: 16px; }
 .ui-svg svg { width: 100%; height: 100%; fill: currentColor; }
 .ui-swatch { display: inline-block; width: 14px; height: 14px; border-radius: 4px; box-shadow: inset 0 0 0 1px var(--line); }
+
+.toasts { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom)); z-index: 2000; display: grid; gap: 8px; width: min(440px, calc(100vw - 24px)); transform: translateX(-50%); pointer-events: none; }
+.toast { position: relative; display: flex; align-items: center; gap: 12px; padding: 11px 8px 11px 16px; overflow: hidden; border-radius: 12px; background: #161616; color: #f4f4f2; font-size: 14px; line-height: 1.35; box-shadow: 0 16px 40px -14px rgba(0, 0, 0, 0.45); pointer-events: auto; animation: toast-in 220ms var(--ease); }
+@keyframes toast-in { from { opacity: 0; transform: translateY(10px); } }
+.toast-msg { flex: 1; min-width: 0; }
+.toast-action { flex: none; height: 30px; padding: 0 10px; border: 0; border-radius: 7px; background: rgba(255, 255, 255, 0.12); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+.toast-action:hover { background: rgba(255, 255, 255, 0.2); }
+.toast-close { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border: 0; border-radius: 7px; background: none; color: rgba(255, 255, 255, 0.7); cursor: pointer; }
+.toast-close:hover { color: #fff; background: rgba(255, 255, 255, 0.1); }
+.toast-action:focus-visible, .toast-close:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+.toast-time { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: rgba(255, 255, 255, 0.35); transform-origin: left; animation: toast-time linear forwards; }
+.toast:hover .toast-time, .toast:focus-within .toast-time { animation-play-state: paused; }
+@keyframes toast-time { to { transform: scaleX(0); } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+@media (max-width: 760px) { .toasts { bottom: calc(68px + env(safe-area-inset-bottom)); } }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

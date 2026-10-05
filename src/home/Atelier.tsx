@@ -4,7 +4,8 @@ import { useT, useUiLang } from '../i18n'
 import { blankDoc } from '../model/factories'
 import type { Doc } from '../model/schema'
 import { useDoc } from '../store/doc'
-import { canOpenFolder, listDocs, openFolder, parseFile, removeDoc, saveDoc, type DocMeta } from '../store/persist'
+import { canOpenFolder, listDocs, openFolder, parseFile, readDoc, removeDoc, saveDoc, type DocMeta } from '../store/persist'
+import { toast } from '../ui/toast'
 import { Btn } from '../ui/kit'
 import { ImportDialog } from '../importer/ImportDialog'
 
@@ -72,9 +73,12 @@ export function Atelier() {
                 tone="proof"
                 label={t('docs.delete')}
                 onClick={async () => {
-                  if (!window.confirm(t('docs.confirmDelete', { name: d.name }))) return
+                  const saved = await readDoc(d.id)
                   await removeDoc(d.id)
                   setDocs(await listDocs())
+                  toast(t('docs.deleted', { name: d.name }), {
+                    action: saved ? { label: t('ui.undo'), run: async () => { await saveDoc(saved); setDocs(await listDocs()) } } : undefined,
+                  })
                 }}
               />
             </li>

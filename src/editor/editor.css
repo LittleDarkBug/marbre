@@ -276,3 +276,8 @@ button.ats-msg { cursor: pointer; text-decoration: underline; text-decoration-th
 .item-grip.is-dragging { cursor: grabbing; }
 .item-drop { position: absolute; z-index: 26; background: var(--ink); border-radius: 1px; pointer-events: none; }
 @media (pointer: coarse) { .item-grip { transform: scale(1.4); } }
+.linkpop { position: absolute; z-index: 40; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; width: 340px; max-width: calc(100% - 16px); padding: 8px; background: var(--paper); border-radius: 12px; box-shadow: 0 0 0 1px var(--line), 0 14px 36px -12px rgba(0, 0, 0, 0.3); animation: ui-pop 140ms var(--ease); }
+.linkpop-field { flex: 1 1 160px; min-width: 0; }
+.linkpop-field .ui-input { width: 100%; height: 34px; }
+.linkpop-field .ui-input[aria-invalid='true'] { outline: 2px solid var(--proof); outline-offset: -1px; }
+.linkpop-err { flex-basis: 100%; margin: 0; font-size: 12.5px; color: var(--proof); }

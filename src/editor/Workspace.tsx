@@ -8,6 +8,7 @@ import { editApi } from './editApi'
 import { FreeTransform, decorKey } from './FreeTransform'
 import { GroupTransform } from './GroupTransform'
 import { TextToolbar } from './TextToolbar'
+import { LinkEditor } from './LinkEditor'
 import { Overlay } from './Overlay'
 import { Rulers } from './Rulers'
 import { SelectionBar } from './SelectionBar'
@@ -141,6 +142,7 @@ export function Workspace({ doc, onFit }: { doc: Doc; onFit: (f: Fit) => void })
       }}
     >
       {lasso && <div className="ws-lasso" style={{ left: Math.min(lasso.x0, lasso.x1), top: Math.min(lasso.y0, lasso.y1), width: Math.abs(lasso.x1 - lasso.x0), height: Math.abs(lasso.y1 - lasso.y0) }} />}
+      <LinkEditor host={host} />
       <TextToolbar host={host} palette={[doc.theme.colors.ink, doc.theme.colors.accent, '#5c5c5c', '#ffffff']} />
       <div className="ws-stage" style={{ width: pageW * scale + pad * 2 + offset, height: contentH * scale + pad * 2 + offset }}>
         <div className="ws-sheet" style={{ left: pad + offset, top: pad + offset, width: pageW * scale, height: contentH * scale }}>

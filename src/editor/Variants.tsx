@@ -6,6 +6,7 @@ import type { Doc, Override } from '../model/schema'
 import { useDoc } from '../store/doc'
 import { Btn, Section } from '../ui/kit'
 import { Select } from '../ui/Select'
+import { toast } from '../ui/toast'
 
 function describe(doc: Doc, o: Override) {
   const names: string[] = []
@@ -80,9 +81,19 @@ export function Variants({ doc }: { doc: Doc }) {
               tone="proof"
               label={t('var.delete')}
               onClick={() => {
-                if (!window.confirm(t('var.confirmDelete', { name: current.name }))) return
+                const removed = current
+                const index = useDoc.getState().base.variants.findIndex((v) => v.id === removed.id)
                 setVariant(null)
-                editBase((d) => { d.variants = d.variants.filter((v) => v.id !== current.id) })
+                editBase((d) => { d.variants = d.variants.filter((v) => v.id !== removed.id) })
+                toast(t('var.deleted', { name: removed.name }), {
+                  action: {
+                    label: t('ui.undo'),
+                    run: () => {
+                      editBase((d) => { if (!d.variants.some((v) => v.id === removed.id)) d.variants.splice(index, 0, removed) })
+                      setVariant(removed.id)
+                    },
+                  },
+                })
               }}
             />
           }

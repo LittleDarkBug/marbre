@@ -5,6 +5,7 @@ import { escape, sanitize } from '../model/rich'
 import type { FieldProps } from '../render/context'
 import { useDoc } from '../store/doc'
 import { insertBullet, removeFromList } from './actions'
+import { openLinkEditor } from './LinkEditor'
 
 export const focusPath = (path: string[], atEnd = true) =>
   requestAnimationFrame(() => {
@@ -60,9 +61,7 @@ export function EditableField({ path, value, as = 'span', className, plain, mult
     }
     if (mod && !plain && e.key === 'k') {
       e.preventDefault()
-      const url = window.prompt(translate(lang, 'edit.link'))
-      if (url && /^(https?:|mailto:|tel:)/i.test(url)) exec('createLink', url)
-      commit(el)
+      openLinkEditor(el)
       return
     }
     if (e.key === 'Enter') {

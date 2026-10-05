@@ -164,3 +164,45 @@ test('variant picker is a styled listbox usable with the keyboard', async ({ pag
   await expect(page.getByRole('listbox')).toHaveCount(0)
   await expect(page.locator('select')).toHaveCount(0)
 })
+
+test('deleting a document can be undone from the notification', async ({ page }) => {
+  await fromTemplate(page)
+  await page.waitForTimeout(600)
+  await page.goto('/#/')
+  page.on('dialog', () => {
+    throw new Error('native dialog')
+  })
+  await expect(page.locator('.atelier-item')).toHaveCount(1)
+  await page.locator('.atelier-item').getByRole('button', { name: /supprimer|delete/i }).click()
+  await expect(page.locator('.atelier-item')).toHaveCount(0)
+  await page.locator('.toast').getByRole('button', { name: /annuler|undo/i }).click()
+  await expect(page.locator('.atelier-item')).toHaveCount(1)
+})
+
+test('links are added with an inline field, without a browser prompt', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'text selection toolbar on desktop')
+  page.on('dialog', () => {
+    throw new Error('native dialog')
+  })
+  await fromTemplate(page)
+  const profile = page.locator('.mb-page.is-editing [data-path="blocks/profile/body"]')
+  await profile.click()
+  await profile.evaluate((el) => {
+    const range = document.createRange()
+    range.setStart(el.firstChild!, 0)
+    range.setEnd(el.firstChild!, 10)
+    const sel = window.getSelection()!
+    sel.removeAllRanges()
+    sel.addRange(range)
+  })
+  await page.keyboard.press('Control+k')
+  const input = page.locator('.linkpop input')
+  await expect(input).toBeFocused()
+  await input.fill('pas une adresse')
+  await page.keyboard.press('Enter')
+  await expect(page.locator('.linkpop-err')).toBeVisible()
+  await input.fill('camille.dev')
+  await page.keyboard.press('Enter')
+  await expect(page.locator('.linkpop')).toHaveCount(0)
+  await expect(profile.locator('a')).toHaveAttribute('href', 'https://camille.dev')
+})

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useT } from '../i18n'
 import { Btn } from '../ui/kit'
+import { openLinkEditor } from './LinkEditor'
 
 type Spot = { x: number; y: number; field: HTMLElement } | null
 
@@ -38,10 +39,7 @@ export function TextToolbar({ host, palette }: { host: HTMLElement | null; palet
       <Btn
         icon="link"
         label={t('fmt.link')}
-        onClick={() => {
-          const url = window.prompt(t('edit.link'))
-          if (url && /^(https?:|mailto:|tel:)/i.test(url)) run('createLink', url)
-        }}
+        onClick={() => openLinkEditor(spot.field)}
       />
       <span className="fmt-sep" aria-hidden="true" />
       {palette.map((c) => (
