@@ -1,4 +1,5 @@
 import { pdfminerLayout, type Char } from '../ats/pdfminer'
+import { columnize } from './layout'
 import { ImportError, LIMITS, type Line, type Source, type SourceImage } from './types'
 
 type PdfJs = typeof import('pdfjs-dist')
@@ -152,11 +153,11 @@ const SIDE_TEXT = /\b(?:19|20)\d{2}\b|\b(?:present|aujourd|actuel|current|now)\b
 function mergeSideLines(lines: Line[]): Line[] {
   const used = new Set<Line>()
   for (const short of lines) {
-    if (short.text.length > 48 || short.box === undefined || !SIDE_TEXT.test(short.text)) continue
-    const sameBox = lines.filter((l) => l.box === short.box)
-    if (sameBox.length > 3) continue
+    if (short.text.length > 48 || !SIDE_TEXT.test(short.text)) continue
+    const right = Math.max(...lines.filter((l) => l.page === short.page && l.col === short.col).map((l) => l.x1))
+    if (short.x1 < right - 24) continue
     const host = lines.find(
-      (l) => l !== short && !used.has(l) && l.page === short.page && l.box !== short.box && l.x1 < short.x0 && Math.abs(l.y0 - short.y0) < Math.max(2, short.size * 0.45) && short.x0 - l.x1 < 400,
+      (l) => l !== short && !used.has(l) && l.page === short.page && l.col === short.col && l.x1 + 8 < short.x0 && Math.abs(l.y0 - short.y0) < Math.max(2, short.size * 0.45) && short.x0 - l.x1 < 400,
     )
     if (host) {
       host.side = [...(host.side ?? []), short.text]
@@ -164,14 +165,6 @@ function mergeSideLines(lines: Line[]): Line[] {
     }
   }
   return lines.filter((l) => !used.has(l))
-}
-
-function countColumns(lines: Line[], width: number) {
-  const starts = lines.filter((l) => l.text.length > 20).map((l) => l.x0)
-  if (starts.length < 8) return 1
-  const left = starts.filter((x) => x < width * 0.45).length
-  const right = starts.filter((x) => x >= width * 0.45).length
-  return right > starts.length * 0.2 && left > starts.length * 0.2 ? 2 : 1
 }
 
 export async function readPdf(data: ArrayBuffer, password?: string): Promise<Source> {
@@ -255,7 +248,8 @@ export async function readPdf(data: ArrayBuffer, password?: string): Promise<Sou
     }
     if (lines.length > LIMITS.lines) break
   }
-  return { kind: 'pdf', lines: mergeSideLines(lines), pages: doc.numPages, images, columns: countColumns(lines.filter((l) => l.page === 1), width), raw, warnings }
+  const laid = columnize(lines, width)
+  return { kind: 'pdf', lines: mergeSideLines(laid.lines), pages: doc.numPages, images, columns: laid.columns, raw, warnings }
 }
 
 export async function renderPdfPages(data: ArrayBuffer, max: number, password?: string): Promise<HTMLCanvasElement[]> {

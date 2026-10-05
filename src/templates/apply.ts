@@ -68,6 +68,16 @@ export function applyTemplate(content: Doc, templateId: string): Doc {
     placed.add(b.id)
   }
 
+  for (const col of flowColumns(sample)) {
+    const model = col.blocks.map((id) => sampleById.get(id)).find((b) => b && b.type !== 'photo' && Object.keys(b.style ?? {}).length)
+    const target = columns.find((c) => c.id === col.id)
+    if (!model || !target) continue
+    for (const id of target.blocks) {
+      const b = out.blocks.find((x) => x.id === id)
+      if (b && b.type !== 'photo' && Object.keys(b.style ?? {}).length === 0) b.style = structuredClone(model.style)
+    }
+  }
+
   const photo = out.blocks.find((b) => b.type === 'photo')
   out.layout.frames = {}
   out.layout.order = []

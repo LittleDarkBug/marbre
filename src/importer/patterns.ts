@@ -47,7 +47,7 @@ export function sectionOf(text: string, exact = false): SectionKind | null {
 }
 
 export function respace(text: string) {
-  if (/\s/.test(text.trim())) return text
+  if (/[\s'’-]/.test(text.trim())) return text
   const squeezed = fold(text).replace(/[ ']/g, '')
   for (const [, words] of DICT) {
     for (const w of words) {
@@ -72,20 +72,37 @@ const MONTH = String.raw`(?:janv(?:ier)?|jan(?:uary)?|ene(?:ro)?|genn(?:aio)?|j[
 const DAY = String.raw`(?:\d{1,2}(?:er|st|nd|rd|th)?\s+)?`
 const ONE = String.raw`(?:${DAY}${MONTH}\.?\s*(?:\d{2}\s+)?\d{4}|\d{1,2}\s*[/.\-]\s*\d{4}|\d{4}\s*[/.\-]\s*\d{1,2}(?!\d)|(?:19|20)\d{2})`
 const PRESENT = String.raw`(?:present|présent|current|now|today|aujourd['’]?hui|actuel(?:lement)?|en cours|ce jour|presente|actual(?:idad)?|heute|oggi|ongoing|à ce jour)`
-const SEP = String.raw`\s*(?:[-–\u2014~]|à|au|to|until|till|a|bis|al|jusqu['’]?(?:à|en|au))\s*`
+const SEP = String.raw`\s*(?:[-–\u2014~|\u2192\u2794]|->|à|au|to|until|till|a|bis|al|jusqu['’]?(?:à|en|au))\s*`
 
 export const DATE_RANGE = new RegExp(String.raw`${DAY}${MONTH}\.?${SEP}${DAY}${MONTH}\.?\s*\d{4}|(?:(?:de|du|from|since|depuis|desde|seit|dal)\s+)?${ONE}(?:${SEP}(?:${ONE}|${PRESENT}))?|(?:depuis|since|desde|seit)\s+${ONE}`, 'i')
 
+const tidyRange = (d: string) => d.replace(/\s*(?:[|\u2192\u2794]|->)\s*/g, ' – ').replace(/\s*[-–\u2014]\s*/g, ' – ').replace(/\s+/g, ' ').trim()
+
 export function findDates(text: string): { dates: string; rest: string } | null {
-  const m = DATE_RANGE.exec(text)
-  if (!m) return null
-  const dates = m[0].trim()
-  const before = text.slice(0, m.index)
-  const after = text.slice(m.index + m[0].length)
-  const bareYear = /^(?:19|20)\d{2}$/.test(dates)
-  if (bareYear && text.length > 50 && !/[(|,–—-]\s*$/.test(before) && !/^\s*(?:[)|,–—-]|$)/.test(after)) return null
-  const rest = (before + ' ' + after)
-    .replace(/[([]\s*[)\]]/g, '')
+  const all = [...text.matchAll(new RegExp(DATE_RANGE.source, 'gi'))].filter((m) => m[0].trim())
+  if (!all.length) return null
+  const first = all[0]
+  const dates0 = first[0].trim()
+  const bareYear = /^(?:19|20)\d{2}$/.test(dates0) && all.length === 1
+  const before0 = text.slice(0, first.index)
+  const after0 = text.slice(first.index! + first[0].length)
+  if (bareYear && text.length > 50 && !/[(|,–—-]\s*$/.test(before0) && !/^\s*(?:[)|,–—-]|$)/.test(after0)) return null
+  let dates = tidyRange(dates0)
+  const lastMatch = all[all.length - 1]
+  const close = all.length > 1 && lastMatch.index! - (first.index! + first[0].length) <= 40
+  if (!close) all.splice(1)
+  if (all.length > 1) {
+    const last = tidyRange(all[all.length - 1][0].trim())
+    const start = dates.split(' – ')[0]
+    const end = last.split(' – ').pop()!
+    if (/\d{4}/.test(start) || /\d{4}/.test(end)) dates = `${start} – ${end}`
+  }
+  let rest = text
+  for (const m of [...all].reverse()) rest = rest.slice(0, m.index) + ' ' + rest.slice(m.index! + m[0].length)
+  rest = rest
+    .replace(/[([]\s*[|·,;–-]?\s*[)\]]/g, '')
+    .replace(/\s+([,;])/g, '$1')
+    .replace(/([,;])(?:\s*[,;])+/g, '$1')
     .replace(/\s*[|·•,–—-]\s*$/g, '')
     .replace(/^\s*[|·•,–—-]\s*/g, '')
     .replace(/\s+/g, ' ')
@@ -98,7 +115,7 @@ export const URL = /\b(?:https?:\/\/)?(?:www\.)?(?:[a-z0-9-]+\.)+(?:com|fr|io|de
 export const PHONE = /(?:\+\d{1,3}[\s.-]?)?(?:\(0\)\s?)?(?:\d[\s.-]?){8,13}\d/
 export const LINKEDIN = /(?:https?:\/\/)?(?:[a-z]{2,3}\.)?linkedin\.com\/in\/[^\s,;|()]+/i
 export const GITHUB = /(?:https?:\/\/)?(?:www\.)?github\.com\/[^\s,;|()]+/i
-export const POSTCODE_CITY = /\b\d{5}\s+[A-ZÀ-Ý][\p{L}'-]+(?:[ -][A-ZÀ-Ý][\p{L}'-]+){0,2}|\b[A-ZÀ-Ý][\p{L}'-]+(?:[ -][A-ZÀ-Ý][\p{L}'-]+){0,2}\s?\(\d{2,3}\)(?:,\s*[A-ZÀ-Ý][\p{L}-]+)?|\b[A-ZÀ-Ý][\p{L}-]+(?:[ -][A-ZÀ-Ý][\p{L}-]+)?,\s*(?:France|Belgique|Belgium|Suisse|Switzerland|Canada|Qu[eé]bec|Luxembourg|Maroc|Morocco|Tunisie|S[eé]n[eé]gal|C[oô]te d'Ivoire|Togo|B[eé]nin|Cameroun|Germany|Allemagne|Spain|Espagne|Italy|Italie|UK|United Kingdom|USA|United States|Portugal|Netherlands|Pays-Bas)\b/u
+export const POSTCODE_CITY = /\b\d{5}\s+[A-ZÀ-Ý][\p{L}'’-]+(?:[ -][A-ZÀ-Ý][\p{L}'’-]+){0,2}|\b[A-ZÀ-Ý][\p{L}'’-]+(?:[ -][A-ZÀ-Ý][\p{L}'’-]+){0,2}\s?\(\d{2,3}\)(?:,\s*[A-ZÀ-Ý][\p{L}'’-]+)?|\b[A-ZÀ-Ý][\p{L}'’-]+(?:[ -][A-ZÀ-Ý][\p{L}'’-]+)?,\s*(?:France|Belgique|Belgium|Suisse|Switzerland|Canada|Qu[eé]bec|Luxembourg|Maroc|Morocco|Tunisie|S[eé]n[eé]gal|C[oô]te d'Ivoire|Togo|B[eé]nin|Cameroun|Germany|Allemagne|Spain|Espagne|Italy|Italie|UK|United Kingdom|USA|United States|Portugal|Netherlands|Pays-Bas)\b/u
 
 export const BULLET = /^\s*(?:[•●▪■‣⁃∙·◦▸►▶➔➤➢❖◆◇○✓✔→*–—-]|o(?=\s)|\d{1,2}[.)](?=\s))\s*/
 

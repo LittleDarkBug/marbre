@@ -18,11 +18,19 @@ const upperRatio = (s: string) => {
 
 type Row = Line & { full: string }
 
+const LONE_BULLET = /^[•●▪■‣⁃∙◦▸►▶➔➤➢❖◆◇○✓✔→*–-]$/
+
 function normalize(lines: Line[]): Row[] {
+  let pending = false
   return lines
     .map((l) => {
       let text = fixAccents(l.text).replace(/[\uE000-\uF8FF\uFFFD\u25A1]/g, ' ').replace(/^(?:INFORMATIONS\s+)?PERSONNELLES\s+(?=\p{Lu})/u, '').replace(/\s+/g, ' ').trim()
-      let bullet = l.bullet ?? false
+      if (LONE_BULLET.test(text)) {
+        pending = true
+        return { ...l, text: '', bullet: false, full: '' }
+      }
+      let bullet = (l.bullet ?? false) || pending
+      pending = false
       const m = BULLET.exec(text)
       if (m && text.length > m[0].length + 1 && !/^\d{4}/.test(text) && !/^-\s*\d/.test(text)) {
         bullet = true
@@ -57,6 +65,7 @@ function titleOk(r: Line & { full: string }, name: string) {
     !STREET.test(t) &&
     !DOB.test(t) &&
     !/:\s*$/.test(t) &&
+    !/^[\p{L} .'-]+,\s*[A-Z]{2}(?:\s|$)/u.test(t) &&
     !/^[\p{L} .'-]+,?\s+[A-Z]{2}$/u.test(t) &&
     !/[§#@]/.test(t) &&
     !/X{3}/.test(t) &&
@@ -191,7 +200,7 @@ function isHeading(row: Row, body: number, sigs: Sig[], next?: Row, inside?: Sec
   return null
 }
 
-const PLACE = /^[\p{Lu}][\p{L} .'-]{1,30}(?:,\s*[\p{Lu}][\p{L} .'-]{1,30}){1,2}$/u
+const PLACE = /^[\p{Lu}][\p{L} .'’-]{1,30}(?:\s*\([^)]{2,30}\))?(?:,\s*[\p{Lu}][\p{L} .'’-]{1,30}(?:\s*\([^)]{2,30}\))?){0,2}$/u
 
 function splitOrg(text: string): { org: string; meta: string } {
   const parts = text.split(/\s*(?:\||·|•|\u2013|\u2014| - )\s*/).filter(Boolean)
@@ -210,6 +219,7 @@ function entries(rows: Row[], kind: SectionKind, body: number): { items: ParsedE
   let cur: ParsedEntry | null = null
   let headerLines = 0
   let lastField: 'title' | 'subtitle' | 'org' | 'meta' | null = null
+  let titleRow: Row | null = null
   const fresh = (): ParsedEntry => ({ title: '', subtitle: '', org: '', meta: '', dates: '', body: '', bullets: [] })
   const hasContent = (e: ParsedEntry) => e.bullets.length > 0 || e.body.length > 0
   const anchors = rows.filter((r) => !r.bullet && (r.bold || findDates(r.full)) && r.text.length < 110).map((r) => r.x0)
@@ -234,13 +244,17 @@ function entries(rows: Row[], kind: SectionKind, body: number): { items: ParsedE
     const date = findDates(text)
     const next = rows[i + 1]
     const nextDate = next ? findDates(next.full) : null
+    if (cur && cur.body && !cur.bullets.length && !row.bullet && !row.bold && !date && !row.side?.length && (/^[\p{Ll}]/u.test(text) || !hasEnd(cur.body))) {
+      cur.body = `${cur.body} ${text}`
+      continue
+    }
     const last = cur?.bullets[cur.bullets.length - 1]
     if (last !== undefined && wrapped.has(row)) {
-      cur!.bullets[cur!.bullets.length - 1] = `${last} ${text}`
+      cur!.bullets[cur!.bullets.length - 1] = /\p{L}-$/u.test(last) ? `${last}${text}` : `${last} ${text}`
       continue
     }
     if (last !== undefined && !row.bullet && rows[i - 1]?.bullet && !row.bold && !date && /^[\p{Ll}(]/u.test(text) && !hasEnd(last)) {
-      cur!.bullets[cur!.bullets.length - 1] = `${last} ${text}`
+      cur!.bullets[cur!.bullets.length - 1] = /\p{L}-$/u.test(last) ? `${last}${text}` : `${last} ${text}`
       continue
     }
     const headerish = !row.bullet && text.length < 110 && (row.bold || Boolean(date) || (row.size > body * 1.05) || (Boolean(nextDate) && !next?.bullet && text.length < 80))
@@ -253,12 +267,14 @@ function entries(rows: Row[], kind: SectionKind, body: number): { items: ParsedE
       cur[lastField] = `${cur[lastField]} ${text}`
       continue
     }
-    const startNew = !cur || (headerish && (hasContent(cur) || (cur.dates !== '' && Boolean(date) && headerLines >= 1) || (row.bold && cur.title !== '' && cur.org !== '' && (cur.dates !== '' || headerLines >= 3))))
+    const twin = titleRow !== null && cur !== null && cur.title !== '' && cur.dates !== '' && headerLines >= 2 && row.bold === titleRow.bold && Math.abs(row.size - titleRow.size) < 0.3 && Math.abs(row.x0 - titleRow.x0) < 2 && !date
+    const startNew = !cur || (headerish && (hasContent(cur) || twin || (cur.dates !== '' && Boolean(date) && headerLines >= 1) || (row.bold && cur.title !== '' && cur.org !== '' && (cur.dates !== '' || headerLines >= 3))))
     if (startNew && (headerish || !cur)) {
       if (cur) items.push(cur)
       cur = fresh()
       headerLines = 0
       lastField = null
+      titleRow = null
     }
     const e = cur!
     if (headerish && !hasContent(e)) {
@@ -270,15 +286,39 @@ function entries(rows: Row[], kind: SectionKind, body: number): { items: ParsedE
       }
       if (!rest) continue
       if (!e.title) {
-        e.title = rest
+        titleRow = row
+        const parts = rest.split(/\s+[·|]\s+/)
+        const commas = parts[0].split(/,\s+/)
+        if (parts.length > 1 && JOB_WORD.test(parts[1]) && !JOB_WORD.test(parts[0])) {
+          e.title = parts[1]
+          e.org = parts[0]
+          e.meta = parts.slice(2).join(', ')
+        } else if (parts.length > 1) {
+          e.title = parts[0]
+          e.meta = parts.slice(1).join(', ')
+        } else if (kind === 'projects' && commas.length >= 2) {
+          e.title = commas[0]
+          e.meta = commas.slice(1).join(', ')
+        } else if (commas.length === 2 && kind !== 'projects' && !JOB_WORD.test(commas[1])) {
+          e.title = commas[0]
+          e.org = commas[1]
+        } else if (commas.length >= 3) {
+          const place = PLACE.test(commas[commas.length - 1]) && !JOB_WORD.test(commas[commas.length - 1]) ? commas.pop()! : ''
+          e.org = commas.length >= 2 ? commas.pop()! : ''
+          e.title = commas.join(', ')
+          e.meta = place
+        } else e.title = rest
         lastField = 'title'
       } else if (row.italic && !e.subtitle) {
         e.subtitle = rest
         lastField = 'subtitle'
+      } else if (!e.org && PLACE.test(rest) && !JOB_WORD.test(rest) && rest.split(' ').length <= 6) {
+        e.meta = [e.meta, rest].filter(Boolean).join(', ')
+        lastField = 'meta'
       } else if (!e.org) {
         const split = splitOrg(rest)
         e.org = split.org
-        e.meta = split.meta
+        e.meta = [e.meta, split.meta].filter(Boolean).join(', ')
         lastField = split.meta ? 'meta' : 'org'
       } else {
         e.meta = e.meta ? `${e.meta}, ${rest}` : rest
@@ -292,7 +332,7 @@ function entries(rows: Row[], kind: SectionKind, body: number): { items: ParsedE
     }
     const prev = rows[i - 1]
     if (e.bullets.length && prev && (prev.bullet || (e.bullets.length && !hasEnd(e.bullets[e.bullets.length - 1]))) && (/^[\p{Ll}(]/u.test(text) || !hasEnd(e.bullets[e.bullets.length - 1]))) {
-      e.bullets[e.bullets.length - 1] += ` ${text}`
+      e.bullets[e.bullets.length - 1] += /\p{L}-$/u.test(e.bullets[e.bullets.length - 1]) ? text : ` ${text}`
       continue
     }
     if (!e.title && text.length < 90) {
@@ -303,20 +343,56 @@ function entries(rows: Row[], kind: SectionKind, body: number): { items: ParsedE
     if (!e.org && text.length < 70 && !e.body && !e.bullets.length && kind !== 'projects') {
       const split = splitOrg(date ? date.rest : text)
       e.org = split.org
-      e.meta = split.meta
+      e.meta = [e.meta, split.meta].filter(Boolean).join(', ')
       if (date && !e.dates) e.dates = date.dates
       continue
     }
     e.body = e.body ? `${e.body} ${text}` : text
   }
   if (cur) items.push(cur)
+  const strip = (v: string) => v.replace(/[\s,;·|]+$/, '').trim()
+  for (const e of items) {
+    e.title = strip(e.title)
+    e.org = strip(e.org)
+    e.meta = strip(e.meta)
+    e.subtitle = strip(e.subtitle)
+  }
   const clean = items.filter((e) => e.title || e.org || e.body || e.bullets.length)
   return { items: clean, text: '' }
 }
 
-const hasEnd = (s: string) => /[.!?;:)]$/.test(s.trim())
+const hasEnd = (s: string) => /[.!?;:]$/.test(s.trim())
 
-function skills(rows: Row[]): ParsedSection['groups'] {
+const CONNECTOR = /(?:[,;:/&(\-–·+]|\b(?:and|et|de|des|du|d'|en|of|the|à|with|avec|ou|or|pour|for|sur|par|in|la|le|les|un|une|au|aux))$/iu
+
+function continues(prev: Row, next: Row, right = Infinity) {
+  const a = prev.full.trim()
+  const b = next.full.trim()
+  const soft = /^[\p{Ll}(]/u.test(b)
+  if (!a || !b || next.bullet || (findDates(b) && !soft)) return false
+  const open = (a.match(/\(/g) ?? []).length > (a.match(/\)/g) ?? []).length
+  const full = right !== Infinity && !prev.side?.length && prev.x1 >= right - Math.max(12, (right - prev.x0) * 0.16) && !/[.!?:]$/.test(a)
+  const linked = open || CONNECTOR.test(a) || soft || (full && prev.bold === next.bold)
+  if (prev.bold !== next.bold) return linked && (CONNECTOR.test(a) || /:\s*\S/.test(a))
+  return linked
+}
+
+function mergeWrapped(rows: Row[]): Row[] {
+  const out: Row[] = []
+  const right = rows.length > 2 ? Math.max(...rows.map((r) => r.x1)) : Infinity
+  for (const r of rows) {
+    const prev = out[out.length - 1]
+    if (prev && continues(prev, r, right)) {
+      const a = prev.full.trim()
+      const glue = /\S[-/]$/.test(a) ? '' : ' '
+      out[out.length - 1] = { ...prev, x1: r.x1, text: `${prev.text.trim()}${glue}${r.text.trim()}`, full: `${a}${glue}${r.full.trim()}`, bold: prev.bold && r.bold }
+    } else out.push(r)
+  }
+  return out
+}
+
+function skills(input: Row[]): ParsedSection['groups'] {
+  const rows = mergeWrapped(input)
   const groups: ParsedSection['groups'] = []
   let pendingLabel = ''
   for (let i = 0; i < rows.length; i++) {
@@ -348,15 +424,15 @@ function skills(rows: Row[]): ParsedSection['groups'] {
 
 const LEVEL = /\b(?:natif|native|maternelle|mother tongue|bilingue|bilingual|courant|fluent|professional|professionnel|interm[eé]diaire|intermediate|notions|basic|d[eé]butant|beginner|scolaire|lu,? [eé]crit,? parl[eé]|[ABC][12])\b/i
 
-function pairs(rows: Row[]): ParsedSection['pairs'] {
+function pairs(input: Row[], kind: SectionKind = 'languages'): ParsedSection['pairs'] {
   const out: ParsedSection['pairs'] = []
-  for (const row of rows) {
+  for (const row of mergeWrapped(input)) {
     const halves = row.full.split(/\s+[|·•]\s+/)
     const leveled = halves.length === 2 && (LEVEL.test(halves[1]) || /^[\p{Ll}\d(]/u.test(halves[1]) || halves[1].length <= 3)
     const chunks = leveled ? [`${halves[0]}: ${halves[1]}`] : row.full.split(/\s*[;|·•]\s*|,\s+(?=\p{Lu})/u).filter(Boolean)
     for (const chunk of chunks) {
-      const m = /^(.{1,40}?)\s*(?::|\s[-–—]\s|\()\s*(.+?)\)?$/.exec(chunk)
-      if (m) out.push({ key: m[1].trim(), value: m[2].trim() })
+      const m = (kind === 'languages' ? /^(.{1,40}?)\s*(:|\s[-–—]\s|\()\s*(.+)$/ : /^(.{1,40}?)\s*(:|\s[-–—]\s)\s*(.+)$/).exec(chunk)
+      if (m) out.push({ key: m[1].trim(), value: (m[2] === '(' ? m[3].replace(/\)$/, '') : m[3]).trim() })
       else {
         const lvl = LEVEL.exec(chunk)
         if (lvl && lvl.index > 0) out.push({ key: chunk.slice(0, lvl.index).replace(/[\s,-]+$/, ''), value: chunk.slice(lvl.index).trim() })
@@ -524,18 +600,14 @@ function guessKind(rows: Row[]): SectionKind {
 function build(kind: SectionKind, heading: string, rows: Row[], body: number): ParsedSection {
   const s: ParsedSection = { kind, heading, entries: [], pairs: [], groups: [], text: '' }
   if (!rows.length) return s
-  if (TIMELINE.has(kind)) {
+  const dated = rows.some((r) => findDates(r.full)) || rows.some((r) => r.bullet)
+  if (TIMELINE.has(kind) && (dated || kind === 'experience' || kind === 'education')) {
     const e = entries(rows, kind, body)
     s.entries = e.items
   } else if (kind === 'skills') s.groups = skills(rows)
-  else if (kind === 'languages' || kind === 'certifications' || kind === 'awards' || kind === 'references') s.pairs = pairs(rows)
+  else if (kind === 'languages' || kind === 'certifications' || kind === 'awards' || kind === 'references') s.pairs = pairs(rows, kind)
   else {
-    const out: string[] = []
-    for (const r of rows) {
-      if (out.length && !r.bullet && !hasEnd(out[out.length - 1]) && /^[\p{Ll}]/u.test(r.text)) out[out.length - 1] += ` ${r.full}`
-      else out.push(r.full)
-    }
-    s.text = out.join('\n')
+    s.text = mergeWrapped(rows).map((r) => r.full).join('\n')
   }
   return s
 }

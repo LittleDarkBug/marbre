@@ -5,6 +5,7 @@ import { buildDoc } from './build'
 import { looksLikePhoto } from './photo'
 import { importFile } from './index'
 import { decodeMime, fromDocx, fromHtml, fromText } from './markup'
+import { columnize } from './layout'
 import { coverage, parse } from './parse'
 import { findDates, fixAccents, sectionOf } from './patterns'
 import { ImportError, type Line, type Source } from './types'
@@ -61,7 +62,7 @@ describe('patterns', () => {
   it('finds date ranges in many shapes', () => {
     expect(findDates('Data Scientist Mars 2024 – Août 2025')?.dates).toBe('Mars 2024 – Août 2025')
     expect(findDates('Stage 26 mai au 25 juillet 2025')?.dates).toBe('26 mai au 25 juillet 2025')
-    expect(findDates('Developer 03/2021 - present')?.dates).toBe('03/2021 - present')
+    expect(findDates('Developer 03/2021 - present')?.dates).toBe('03/2021 – present')
     expect(findDates('depuis 2023')?.dates).toBe('depuis 2023')
     expect(findDates('Built a model that saved 2024 hours of manual work for the operations team every year')).toBeNull()
   })
@@ -184,6 +185,90 @@ describe('parse', () => {
     const src = source([line('Jane Roe', { size: 22, bold: true }), line('zzq xqv wwk'), line('EXPERIENCE', { size: 12, bold: true }), line('Something odd happened here', { bold: true })])
     const cv = parse(src)
     expect(coverage(src, cv).ratio).toBe(1)
+  })
+})
+
+describe('two column layouts', () => {
+  const at = (text: string, x0: number, x1: number, y: number, o: Partial<Line> = {}): Line => ({ text, page: 1, x0, x1, y0: y, y1: y + 9, size: 9, bold: false, italic: false, ...o })
+  const sidebarCv = () => {
+    const main = [
+      at('Alex Martin', 190, 380, 30, { size: 16, bold: true }),
+      at('Ingénieur Systèmes Linux et DevOps', 190, 400, 50, { size: 11, bold: true }),
+      at('alex@example.org | +33 6 11 22 33 44', 190, 350, 70),
+      at('PROFIL', 190, 230, 130, { size: 10.6, bold: true }),
+      at('Ingénieur systèmes spécialisé en intégration embarquée et en infrastructure DevOps.', 190, 570, 145),
+      at('EXPÉRIENCES', 190, 260, 200, { size: 10.6, bold: true }),
+      at('Ingénieur IoT Embarqué, Orange Innovation, Meylan (France)', 190, 480, 215),
+      at("Stage de fin d'études (Février 2026 | Juillet 2026)", 190, 370, 227, { italic: true }),
+      at('• Portage de Home Assistant en conteneurs.', 196, 470, 239),
+      at('Administrateur Systèmes, DAC Technologies, Lomé (Togo)', 190, 450, 320),
+      at('Stage (Août 2023 | Février 2024), puis temps partiel (Février | Octobre 2024)', 190, 470, 332, { italic: true }),
+      at("• Administration d'un cluster Proxmox en pré-production : provisioning, cycle de vie,", 196, 570, 344),
+      at('incidents de saturation stockage, sauvegardes.', 204, 370, 353),
+      at('• Tableau de bord de supervision avec Grafana et Prometheus.', 196, 540, 365),
+      at('FORMATION', 190, 255, 420, { size: 10.6, bold: true }),
+      at('Master Informatique et Systèmes, Université de Lomé', 190, 470, 435, { bold: true }),
+      at('(2024 | 2026)', 520, 570, 435),
+    ]
+    const side = [
+      at('COMPÉTENCES TECHNIQUES', 30, 160, 160, { bold: true }),
+      at('Virtualisation & conteneurs', 30, 136, 172, { bold: true }),
+      at('Proxmox, Docker / Docker Compose,', 30, 165, 183),
+      at('Kubernetes (bases)', 30, 100, 193),
+      at('CI/CD & observabilité', 30, 116, 206, { bold: true }),
+      at('GitLab CI/CD, Grafana, Loki /', 30, 140, 217),
+      at('Promtail, Prometheus', 30, 107, 227),
+      at('Sécurité', 30, 60, 318, { bold: true }),
+      at('SSO Keycloak, Teleport, OpenSSL', 30, 156, 330),
+      at('LANGUES', 30, 72, 500, { bold: true }),
+      at('Français : natif', 30, 86, 512, { bold: true }),
+      at('Anglais : intermédiaire (certification', 30, 162, 523),
+      at('Linguaskill en cours)', 30, 105, 533),
+      at('INTÉRÊTS', 30, 74, 600, { bold: true }),
+      at('Jeux de société - Randonnée - FabLab', 30, 166, 612),
+    ]
+    const interleaved = [...main.slice(0, 10), ...side, ...main.slice(10)]
+    return interleaved
+  }
+
+  it('reads the sidebar as its own column even when the PDF interleaves them', () => {
+    const laid = columnize(sidebarCv(), 595)
+    expect(laid.columns).toBe(2)
+    const texts = laid.lines.map((l) => l.text)
+    expect(texts.indexOf('incidents de saturation stockage, sauvegardes.')).toBeLessThan(texts.indexOf('COMPÉTENCES TECHNIQUES'))
+    expect(texts[0]).toBe('Alex Martin')
+  })
+
+  it('keeps experience descriptions in experiences and dates on their entry', () => {
+    const laid = columnize(sidebarCv(), 595)
+    const cv = parse({ kind: 'pdf', lines: laid.lines, pages: 1, images: [], columns: laid.columns, raw: '', warnings: [] })
+    const exp = cv.sections.find((s) => s.kind === 'experience')!.entries
+    expect(exp.map((e) => [e.title, e.org, e.meta, e.subtitle, e.dates])).toEqual([
+      ['Ingénieur IoT Embarqué', 'Orange Innovation', 'Meylan (France)', "Stage de fin d'études", 'Février 2026 – Juillet 2026'],
+      ['Administrateur Systèmes', 'DAC Technologies', 'Lomé (Togo)', 'Stage, puis temps partiel', 'Août 2023 – Octobre 2024'],
+    ])
+    expect(exp[1].bullets).toEqual([
+      "Administration d'un cluster Proxmox en pré-production : provisioning, cycle de vie, incidents de saturation stockage, sauvegardes.",
+      'Tableau de bord de supervision avec Grafana et Prometheus.',
+    ])
+    const skills = cv.sections.find((s) => s.kind === 'skills')!.groups
+    expect(skills).toContainEqual({ label: 'CI/CD & observabilité', items: 'GitLab CI/CD, Grafana, Loki / Promtail, Prometheus' })
+    expect(skills).toContainEqual({ label: 'Sécurité', items: 'SSO Keycloak, Teleport, OpenSSL' })
+    expect(cv.sections.find((s) => s.kind === 'languages')!.pairs).toEqual([
+      { key: 'Français', value: 'natif' },
+      { key: 'Anglais', value: 'intermédiaire (certification Linguaskill en cours)' },
+    ])
+    expect(cv.sections.find((s) => s.kind === 'education')!.entries[0]).toMatchObject({ title: 'Master Informatique et Systèmes', org: 'Université de Lomé', dates: '2024 – 2026' })
+  })
+
+  it('does not split a single column page with right aligned dates', () => {
+    y = 0
+    const lines: Line[] = []
+    for (let i = 0; i < 10; i++) {
+      lines.push(line(`Engineer at Company ${i} working on distributed systems and data pipelines`, { x0: 50, x1: 430 }))
+      lines.push({ ...line(`Jan 20${10 + i} – Dec 20${11 + i}`, { x0: 480, x1: 560 }), y0: lines[lines.length - 1].y0, y1: lines[lines.length - 1].y1 })
+    }
+    expect(columnize(lines, 595).columns).toBe(1)
   })
 })
 

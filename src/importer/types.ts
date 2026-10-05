@@ -12,6 +12,7 @@ export type Line = {
   bullet?: boolean
   side?: string[]
   box?: number
+  col?: number
 }
 
 export type SourceImage = { src: string; w: number; h: number; page: number; x: number; y: number; stats?: { dominant: number; colors: number; detail: number } }
