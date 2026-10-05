@@ -1,6 +1,8 @@
 import JSZip from 'jszip'
 import { describe, expect, it } from 'vitest'
+import { applyTemplate } from '../templates/apply'
 import { buildDoc } from './build'
+import { looksLikePhoto } from './photo'
 import { importFile } from './index'
 import { decodeMime, fromDocx, fromHtml, fromText } from './markup'
 import { coverage, parse } from './parse'
@@ -246,6 +248,26 @@ describe('importFile', () => {
     expect(r.kind).toBe('json')
     expect(JSON.stringify(r.doc)).toContain('Jane Roe')
     await expect(importFile(new File(['{oops'], 'x.json'), { lang: 'en' })).rejects.toMatchObject({ code: 'unreadable' })
+  })
+
+  it('shows an imported photo only in templates that have a photo slot', () => {
+    const cv = { ...parse(classic()), photo: { src: 'data:image/png;base64,AA', w: 300, h: 300, page: 1, x: 0, y: 0 } }
+    const doc = buildDoc(cv, { columns: 1, name: 'x', template: 'colonne' })
+    const photo = doc.blocks.find((b) => b.type === 'photo')!
+    expect(photo.hidden).toBe(true)
+    const portrait = applyTemplate(doc, 'portrait')
+    const shown = portrait.blocks.find((b) => b.type === 'photo')!
+    expect(shown.hidden).toBe(false)
+    expect(portrait.layout.columns.some((c) => c.blocks.includes(shown.id))).toBe(true)
+  })
+
+  it('rejects images that are not portraits', () => {
+    const base = { src: '', page: 1, x: 0, y: 0 }
+    expect(looksLikePhoto({ ...base, w: 400, h: 400, stats: { dominant: 0.2, colors: 150, detail: 12 } })).toBe(true)
+    expect(looksLikePhoto({ ...base, w: 2400, h: 1600, stats: { dominant: 0.05, colors: 218, detail: 2.2 } })).toBe(false)
+    expect(looksLikePhoto({ ...base, w: 128, h: 128, stats: { dominant: 1, colors: 1, detail: 0.2 } })).toBe(false)
+    expect(looksLikePhoto({ ...base, w: 800, h: 800, stats: { dominant: 0.73, colors: 88, detail: 4.6 } })).toBe(false)
+    expect(looksLikePhoto({ ...base, w: 1588, h: 2245 })).toBe(false)
   })
 
   it('builds a two column document when the source has two columns', () => {

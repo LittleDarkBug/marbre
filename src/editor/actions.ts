@@ -96,6 +96,15 @@ export function reorderList(doc: Doc, path: string[], fromId: string, toId: stri
   list.splice(to, 0, item)
 }
 
+export function moveToIndex(doc: Doc, path: string[], id: string, index: number) {
+  const list = listAt(doc, path)
+  if (!list) return
+  const i = list.findIndex((x) => x.id === id)
+  if (i < 0) return
+  const [item] = list.splice(i, 1)
+  list.splice(Math.max(0, Math.min(index, list.length)), 0, item)
+}
+
 export function removeFromList(doc: Doc, path: string[], id: string) {
   const list = listAt(doc, path)
   if (!list) return

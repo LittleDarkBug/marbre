@@ -1,4 +1,5 @@
 import { ADDRESS, BULLET, CONTACT_HEADING, EMAIL, JOB_WORD, NOT_NAME, fixAccents, GITHUB, LINKEDIN, PHONE, POSTCODE_CITY, URL, detectLang, findDates, fold, respace, sectionOf } from './patterns'
+import { looksLikePhoto } from './photo'
 import type { Coverage, Line, ParsedContact, ParsedCv, ParsedEntry, ParsedSection, SectionKind, Source } from './types'
 
 const TIMELINE = new Set<SectionKind>(['experience', 'education', 'projects', 'volunteering'])
@@ -504,7 +505,7 @@ export function parse(source: Source): ParsedCv {
     } else merged.push(s)
   }
 
-  const photo = [...source.images].filter((im) => im.w / im.h > 0.55 && im.w / im.h < 1.6).sort((a, b) => b.w * b.h - a.w * a.h)[0]
+  const photo = source.images.filter(looksLikePhoto).sort((a, b) => b.w * b.h - a.w * a.h)[0]
   const cv: ParsedCv = { lang, name, title, contacts, highlights, sections: merged.filter((s) => s.entries.length || s.pairs.length || s.groups.length || s.text), photo, leftovers: [] }
   cv.leftovers = leftovers(source, cv)
   return cv

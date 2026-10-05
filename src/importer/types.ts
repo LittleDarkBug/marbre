@@ -14,7 +14,7 @@ export type Line = {
   box?: number
 }
 
-export type SourceImage = { src: string; w: number; h: number; page: number; x: number; y: number }
+export type SourceImage = { src: string; w: number; h: number; page: number; x: number; y: number; stats?: { dominant: number; colors: number; detail: number } }
 
 export type Source = {
   kind: 'pdf' | 'ocr' | 'docx' | 'html' | 'text' | 'markdown'

@@ -38,6 +38,8 @@ import iCaretLeft from '@phosphor-icons/core/assets/regular/caret-left.svg?raw'
 import iHouse from '@phosphor-icons/core/assets/regular/house.svg?raw'
 import iScan from '@phosphor-icons/core/assets/regular/scan.svg?raw'
 import iSelectionSlash from '@phosphor-icons/core/assets/regular/selection-slash.svg?raw'
+import iArrowLeft from '@phosphor-icons/core/assets/regular/arrow-left.svg?raw'
+import iArrowRight from '@phosphor-icons/core/assets/regular/arrow-right.svg?raw'
 import iDotsThree from '@phosphor-icons/core/assets/regular/dots-three.svg?raw'
 import iMagnifyingGlass from '@phosphor-icons/core/assets/regular/magnifying-glass.svg?raw'
 import iCaretUpDown from '@phosphor-icons/core/assets/regular/caret-up-down.svg?raw'
@@ -86,6 +88,8 @@ export const UI_ICONS = {
   'scan': iScan,
   'selection-slash': iSelectionSlash,
   'dots-three': iDotsThree,
+  'arrow-left': iArrowLeft,
+  'arrow-right': iArrowRight,
   'magnifying-glass': iMagnifyingGlass,
   'caret-up-down': iCaretUpDown,
   'layout': iLayout,

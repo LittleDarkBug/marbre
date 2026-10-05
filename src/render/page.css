@@ -159,8 +159,8 @@
 .mb-page[data-identity='inline'] .mb-keys { background: none; padding: 0; margin: 0; justify-content: flex-end; font-size: var(--mb-s-body); flex-wrap: nowrap; }
 .mb-page[data-identity='inline'] .mb-keys li { white-space: nowrap; }
 .mb-page[data-identity='inline'] .mb-title { white-space: nowrap; }
-.mb-page[data-identity='inline'] .mb-contacts { grid-column: 1 / -1; flex-wrap: nowrap; justify-content: space-between; }
-.mb-page[data-identity='inline'] .mb-contacts li { white-space: nowrap; }
+.mb-page[data-identity='inline'] .mb-contacts { grid-column: 1 / -1; flex-wrap: wrap; justify-content: flex-start; column-gap: 16px; }
+.mb-contacts li { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
 
 .mb-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .mb-row > :last-child:not(:first-child) { text-align: right; flex: 0 0 auto; }

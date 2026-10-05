@@ -71,8 +71,10 @@ export function applyTemplate(content: Doc, templateId: string): Doc {
   const photo = out.blocks.find((b) => b.type === 'photo')
   out.layout.frames = {}
   out.layout.order = []
+  const photoSlot = sampleById.has('photo')
+  if (photo) photo.hidden = !photoSlot
   if (photo && !placed.has(photo.id)) {
-    const host = columns.find((c) => c.panel) ?? side
+    const host = photoSlot ? (columns.find((c) => c.blocks.includes('photo')) ?? columns.find((c) => c.panel) ?? side) : undefined
     if (host) host.blocks.unshift(photo.id)
     else {
       const w = PAGE_MM[out.page.format].w

@@ -4,6 +4,7 @@ import type { Doc } from '../model/schema'
 import { buildDoc } from './build'
 import { fromDocx, fromHtml, fromText } from './markup'
 import { coverage, parse } from './parse'
+import { imageStats } from './photo'
 import { ImportError, LIMITS, type Coverage, type ParsedCv, type Source } from './types'
 
 export type ImportResult = { doc: Doc; cv?: ParsedCv; source?: Source; coverage?: Coverage; kind: string; warnings: string[] }
@@ -102,6 +103,7 @@ export async function importFile(file: File, opts: { lang: 'fr' | 'en'; password
   if (!['pdf', 'image', 'docx', 'odt', 'html', 'txt', 'md', 'rtf'].includes(kind)) throw new ImportError('unsupported')
   const source = await readSource(file, kind, opts.password, progress)
   if (!source.lines.length) throw new ImportError('empty')
+  await Promise.all(source.images.slice(0, 40).map(async (im) => { im.stats = await imageStats(im.src) }))
   progress('parse')
   let cv: ParsedCv
   try {

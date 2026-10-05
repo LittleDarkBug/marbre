@@ -7,15 +7,25 @@ import { decorKey, isDecorKey } from './FreeTransform'
 import { focusPath } from './EditableField'
 import { currentScale, pageEl, pageRect, selectedEl } from './geometry'
 import { useSelectionRects } from './Overlay'
+import { ItemGrip } from './ItemGrip'
 
-const itemList = (doc: Doc, blockId: string) => {
+const itemList = (doc: Doc, blockId: string, itemId?: string) => {
   const b = doc.blocks.find((x) => x.id === blockId)
   if (!b) return null
   if (b.type === 'entries') return 'items'
   if (b.type === 'skills') return 'groups'
-  if (b.type === 'pairs') return 'items'
-  if (b.type === 'identity') return 'contacts'
+  if (b.type === 'pairs' || b.type === 'rating') return 'items'
+  if (b.type === 'identity') return itemId && b.highlights.some((h) => h.id === itemId) ? 'highlights' : 'contacts'
   return null
+}
+
+const horizontal = (sel: { blockId: string; itemId?: string }) => {
+  const el = selectedEl(sel)
+  const sibs = el?.parentElement ? Array.from(el.parentElement.children).filter((c) => c instanceof HTMLElement && c.dataset.item) : []
+  if (sibs.length < 2) return false
+  const a = sibs[0].getBoundingClientRect()
+  const b = sibs[1].getBoundingClientRect()
+  return Math.abs(a.top - b.top) < Math.min(a.height, b.height) / 2
 }
 
 export function SelectionBar({ doc, scale }: { doc: Doc; scale: number }) {
@@ -60,7 +70,8 @@ export function SelectionBar({ doc, scale }: { doc: Doc; scale: number }) {
   const r = rects.item ?? rects.block
   const col = columnOf(doc, block.id)
   const cols = doc.layout.columns
-  const listKey = itemList(doc, block.id)
+  const listKey = itemList(doc, block.id, selection.itemId)
+  const row = selection.itemId ? horizontal(selection) : false
   const itemId = selection.itemId
   const isEntry = block.type === 'entries' && itemId
   const top = Math.max(0, r.y * scale - 46)
@@ -77,9 +88,11 @@ export function SelectionBar({ doc, scale }: { doc: Doc; scale: number }) {
   const otherColumn = col && cols.length > 1 ? cols[(cols.indexOf(col) + 1) % cols.length] : null
 
   return (
+    <>
+    {itemId && listKey && rects.item && <ItemGrip key={itemId} blockId={block.id} itemId={itemId} path={['blocks', block.id, listKey]} rect={rects.item} scale={scale} row={row} />}
     <div className="selbar" role="toolbar" aria-label={t('sel.toolbar')} style={{ left: Math.max(0, r.x * scale), top }} onPointerDown={(e) => e.stopPropagation()}>
-      <Btn icon="arrow-up" label={t('sel.up')} onClick={() => moveVertical(-1)} />
-      <Btn icon="arrow-down" label={t('sel.down')} onClick={() => moveVertical(1)} />
+      <Btn icon={row ? 'arrow-left' : 'arrow-up'} label={t(row ? 'sel.before' : 'sel.up')} onClick={() => moveVertical(-1)} />
+      <Btn icon={row ? 'arrow-right' : 'arrow-down'} label={t(row ? 'sel.after' : 'sel.down')} onClick={() => moveVertical(1)} />
       {!itemId && otherColumn && (
         <Btn icon="columns" label={t('sel.column')} onClick={() => edit((d) => moveBlock(d, block.id, otherColumn.id, otherColumn.blocks.length))} />
       )}
@@ -136,5 +149,6 @@ export function SelectionBar({ doc, scale }: { doc: Doc; scale: number }) {
         }}
       />
     </div>
+    </>
   )
 }
