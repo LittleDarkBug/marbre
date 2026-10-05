@@ -206,3 +206,33 @@ test('links are added with an inline field, without a browser prompt', async ({ 
   await expect(page.locator('.linkpop')).toHaveCount(0)
   await expect(profile.locator('a')).toHaveAttribute('href', 'https://camille.dev')
 })
+
+test('long documents flow onto real pages without crossing a page break', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'layout check on desktop')
+  await fromTemplate(page)
+  await page.evaluate(() => {
+    const store = (window as unknown as { marbre: { store: { getState: () => { edit: (fn: (d: { page: { fit: string }; blocks: { type: string; items?: { bullets: { id: string; text: string }[] }[] }[] }) => void) => void } } } }).marbre.store
+    store.getState().edit((d) => {
+      d.page.fit = 'flow'
+      const xp = d.blocks.find((b) => b.type === 'entries')!
+      for (let i = 0; i < 40; i++) xp.items![0].bullets.push({ id: `extra${i}`, text: `Réalisation numéro ${i} décrite sur une ligne assez longue pour occuper la largeur de la colonne principale.` })
+    })
+  })
+  await page.waitForTimeout(800)
+  const result = await page.evaluate(() => {
+    const p = document.querySelector<HTMLElement>('.mb-page.is-editing')!
+    const scale = p.getBoundingClientRect().height / p.offsetHeight
+    const pageH = (297 * 96) / 25.4
+    const crossing = Array.from(p.querySelectorAll<HTMLElement>('.mb-pts > li')).filter((li) => {
+      const r = li.getBoundingClientRect()
+      const top = (r.top - p.getBoundingClientRect().top) / scale + (li.dataset.pbo ? parseFloat(getComputedStyle(li).paddingTop) - Number(li.dataset.pbo) : 0)
+      const bottom = (r.bottom - p.getBoundingClientRect().top) / scale
+      return Math.floor(top / pageH) !== Math.floor((bottom - 1) / pageH)
+    }).length
+    return { crossing, sheets: p.querySelectorAll('.mb-break').length + 1, height: Math.round(p.offsetHeight / pageH) }
+  })
+  expect(result.crossing).toBe(0)
+  expect(result.sheets).toBeGreaterThan(1)
+  expect(result.height).toBe(result.sheets)
+  await expect(page.locator('.gauge-val').last()).toHaveText(String(result.sheets))
+})

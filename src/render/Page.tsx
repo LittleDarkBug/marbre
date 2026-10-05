@@ -1,10 +1,11 @@
-import { useLayoutEffect, useRef, type CSSProperties } from 'react'
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import type { Block, Column, Doc } from '../model/schema'
 import { BlockView } from './blocks'
 import { StyleCtx } from './context'
 import { nearestWeight } from './fontLibrary'
 import { stack } from './fonts'
 import { iconSvg } from './icons'
+import { clearBreaks, paginate } from './paginate'
 import { decorColor, lineSvg, pathIcon, qrSvg } from './style'
 import './page.css'
 
@@ -14,12 +15,12 @@ export const MM = 96 / 25.4
 export type ColumnFit = { id: string; slack: number }
 export type Fit = { columns: ColumnFit[]; pages: number; overflow: boolean }
 
-function vars(doc: Doc): CSSProperties {
+function vars(doc: Doc, pages: number): CSSProperties {
   const t = doc.theme
   const size = PAGE_MM[doc.page.format]
   return {
     '--mb-w': `${size.w}mm`,
-    '--mb-h': `${size.h * (doc.page.count ?? 1)}mm`,
+    '--mb-h': `${size.h * Math.max(doc.page.count ?? 1, pages)}mm`,
     ...(doc.page.background ? { background: doc.page.background } : {}),
     ...(doc.page.backgroundImage ? { backgroundImage: `url("${doc.page.backgroundImage}")`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}),
     '--mb-ink': t.colors.ink,
@@ -60,7 +61,9 @@ function columnPadding(doc: Doc, i: number, count: number, panel: boolean) {
   return `${m.top}mm ${right}mm ${m.bottom}mm ${left}mm`
 }
 
-function measure(page: HTMLElement, doc: Doc): Fit {
+const paged = (doc: Doc) => doc.layout.mode === 'flow' && (doc.page.fit === 'flow' || (doc.page.count ?? 1) > 1)
+
+function measure(page: HTMLElement, doc: Doc, counted?: number): Fit {
   const columns: ColumnFit[] = []
   for (const col of Array.from(page.querySelectorAll<HTMLElement>('[data-col]'))) {
     const last = col.lastElementChild as HTMLElement | null
@@ -70,8 +73,8 @@ function measure(page: HTMLElement, doc: Doc): Fit {
   }
   const pageH = PAGE_MM[doc.page.format].h * MM
   const count = doc.page.count ?? 1
-  const pages = Math.max(count, Math.ceil((page.scrollHeight - 1) / pageH))
-  const overflow = doc.page.fit === 'one' ? columns.some((c) => c.slack < 0) || page.scrollHeight > pageH * count + 1 : false
+  const pages = counted ?? Math.max(count, Math.ceil((page.scrollHeight - 1) / pageH))
+  const overflow = doc.page.fit === 'one' ? columns.some((c) => c.slack < 0) || pages > count || page.scrollHeight > pageH * count + 1 : false
   return { columns, pages, overflow }
 }
 
@@ -92,11 +95,20 @@ export function Page({ doc, onFit, className }: { doc: Doc; onFit?: (fit: Fit) =
   const byId = new Map(doc.blocks.map((b) => [b.id, b]))
   const cols = doc.layout.mode === 'flow' ? doc.layout.columns : []
   const framed = framedBlocks(doc)
+  const [pages, setPages] = useState(1)
 
   useLayoutEffect(() => {
     const page = ref.current
-    if (!page || !onFit) return
-    const run = () => onFit(measure(page, doc))
+    if (!page) return
+    const pageH = PAGE_MM[doc.page.format].h * MM
+    const run = () => {
+      let counted: number | undefined
+      if (paged(doc)) {
+        counted = paginate(page, pageH, doc.page.margin.top * MM, doc.page.margin.bottom * MM)
+        setPages((p) => (p === counted ? p : counted!))
+      } else clearBreaks(page)
+      onFit?.(measure(page, doc, counted))
+    }
     run()
     const ro = new ResizeObserver(run)
     ro.observe(page)
@@ -110,7 +122,7 @@ export function Page({ doc, onFit, className }: { doc: Doc; onFit?: (fit: Fit) =
     <div
       ref={ref}
       className={`mb-page ${className ?? ''}`}
-      style={vars(doc)}
+      style={vars(doc, doc.page.fit === 'flow' ? pages : 1)}
       lang={doc.lang}
       data-fit={doc.page.fit}
       data-dates={doc.theme.datePlacement}
@@ -125,7 +137,7 @@ export function Page({ doc, onFit, className }: { doc: Doc; onFit?: (fit: Fit) =
       data-bullets={doc.theme.bullets}
     >
       {className?.includes('is-editing') &&
-        Array.from({ length: Math.max(0, (doc.page.count ?? 1) - 1) }, (_, i) => (
+        Array.from({ length: Math.max(0, Math.max(doc.page.count ?? 1, doc.page.fit === 'flow' ? pages : 1) - 1) }, (_, i) => (
           <div key={`break${i}`} className="mb-break" aria-hidden="true" style={{ top: `${PAGE_MM[doc.page.format].h * (i + 1)}mm` }} />
         ))}
       {doc.layout.decor.filter((d) => !d.hidden).map((d) => {

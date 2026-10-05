@@ -87,12 +87,7 @@ export async function autoFit(doc: Doc, maxPages = 3): Promise<FitResult> {
   if (doc.layout.mode !== 'flow') return { doc, scale: 1, pages: doc.page.count ?? 1, fitted: true }
   await loadDocFonts(doc)
   const { measure, dispose } = await measurer()
-  const fits = async (d: Doc) => {
-    const fit = await measure(d)
-    const pages = d.page.count ?? 1
-    const reserve = pages > 1 ? (pages - 1) * (d.page.margin.top + d.page.margin.bottom + 14) * MM : 0
-    return !fit.overflow && fit.columns.every((c) => c.slack >= reserve)
-  }
+  const fits = async (d: Doc) => !(await measure(d)).overflow
   const floor = 0.66
   doc = await balance(doc, measure)
   try {
